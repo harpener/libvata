@@ -12,7 +12,7 @@
 
 #include <vata/symbolic_finite_aut.hh>
 #include <vata/util/triple.hh>
-#include <vata/sym_var_asgn.hh>
+#include "symbolic_finite_aut_bdd"
 
 /// @brief VATA library namespace.
 namespace VATA
@@ -57,7 +57,7 @@ public: // public data types
   /// @brief A strict reverse translation of symbols (addition forbidden).
   using SymbolBackTranslStrict = VATA::SymbolicFiniteAut::SymbolBackTranslStrict;
 
-private: // internal data types
+private: // private data types
 
   /// @brief An internal transition.
   using TransitionType = VATA::Util::Triple<StateType, SymbolType, StateType>;
@@ -71,39 +71,34 @@ private: // internal data types
   /// @brief A set of internal final states.
   using FinalStatesSet = std::unordered_set<StateType>;
 
-private: // symbolic data types
+  /// @brief A symbolic BDD.
+  using SymbolicFiniteAutBDD = VATA::SymbolicFiniteAutBDD;
 
   /// @brief A symbolic representation.
-  using SymbolicVarAsgn = VATA::SymbolicVarAsgn;
+  using SymbolicVarAsgn = VATA::SymbolicFiniteAutBDD::SymbolicVarAsgn;
 
-  /// @brief A symbolic state.
-  using SymStateType = SymbolicVarAsgn;
+  /// @brief A symbolic vector.
+  using AssignmentList = VATA::SymbolicFiniteAutBDD::AssignmentList;
 
-  /// @brief A symbolic symbol.
-  using SymSymbolType = SymbolicVarAsgn;
+  /// @brief A symbolic BDD of transitions.
+  using TransitionsBDD = SymbolicFiniteAutBDD;
 
-  /// @brief A symbolic transition.
-  using SymTransitionType = SymbolicVarAsgn;
+  /// @brief A symbolic BDD of initial states.
+  using InitialStatesBDD = SymbolicFiniteAutBDD;
 
-  /// @brief A vector of symbolic transitions.
-  using SymTransitionsVec = std::vector<SymTransitionType>;
+  /// @brief A symbolic BDD of final states.
+  using FinalStatesBDD = SymbolicFiniteAutBDD;
 
-  /// @brief A vector of symbolic initial states.
-  using SymInitialStatesVec = std::vector<SymStateType>;
+  /// @brief TransitionsBDD pointer for transitions.
+  using TransitionsBDDPtr = std::unique<TransitionsBDD>;
 
-  /// @brief A vector of symbolic final states.
-  using SymFinalStatesVec = std::vector<SymStateType>;
+  /// @brief InitialStatesBDD pointer for transitions.
+  using InitialStatesBDDPtr = std::unique<InitialStatesBDD>;
 
-  /// @brief SymTransitionsSet pointer.
-  using SymTransitionsVecPtr = std::unique_ptr<SymTransitionsVec>;
+  /// @brief FinalStatesBDD pointer for transitions.
+  using FinalStatesBDDPtr = std::unique<FinalStatesBDD>;
 
-  /// @brief SymInitialStatesSet pointer.
-  using SymInitialStatesVecPtr = std::unique_ptr<SymInitialStatesVec>;
-
-  /// @brief SymInitialStatesSet pointer.
-  using SymFinalStatesVecPtr = std::unique_ptr<SymFinalStatesVec>;
-
-private: // symbolic data members
+private: // data members
 
   /// @brief A counter of variables in symbolic state.
   size_t stateVars_;
@@ -111,14 +106,14 @@ private: // symbolic data members
   /// @brief A counter of variables in symbolic symbol.
   size_t symbolVars_;
 
-  /// @brief A vector of symbolic transitions.
-  SymTransitionsVecPtr SymTransitionsVec_;
+  /// @brief A BDD of transitions.
+  TransitionsBDDPtr transitions_;
 
-  /// @brief A vector of symbolic initial states.
-  SymInitialStatesVecPtr SymInitialStatesVec_;
+  /// @brief A BDD of initial states.
+  InitialStatesBDDPtr initialStates_;
 
-  /// @brief A vector of symbolic final states.
-  SymFinalStatesVecPtr SymFinalStatesVec_;
+  /// @brief A BDD of final states.
+  FinalStatesBDDPtr finalStates_;
 
 public: // instantiation
 
@@ -231,33 +226,33 @@ public: // public methods
     stateVars_ = ((size1 < 2) ? 1 : ceil(log2(size1)));
     symbolVars_ = ((size2 < 2) ? 1 : ceil(log2(size2)));
 
-    assert(SymTransitionsVec_   != nullptr);
-    assert(SymInitialStatesVec_ != nullptr);
-    assert(SymFinalStatesVec_   != nullptr);
+    assert(transitions_   != nullptr);
+    assert(initialStates_ != nullptr);
+    assert(finalStates_   != nullptr);
 
     for (auto transition : TransitionsVec)
     { // transitions
-      SymTransitionType triple = MergeTransition(
+      SymbolicVarAsgn triple = MergeTransition(
         transition.first,
         transition.second,
         transition.third
       );
 
-      SymTransitionsVec_->push_back(triple);
+      transitions_->AddElement(triple);
     }
 
     for (auto initialState : InitialStatesSet)
     { // initial states
-      SymStateType state = SymbolicVarAsgn(stateVars_, initialState);
+      SymbolicVarAsgn state(stateVars_, initialState);
 
-      SymInitialStatesVec_->push_back(state);
+      initialStates_->AddElement(state);
     }
 
     for (auto finalState : FinalStatesSet)
     { // final states
-      SymStateType state = SymbolicVarAsgn(stateVars_, finalState);
+      SymbolicVarAsgn state(stateVars_, finalState);
 
-      SymFinalStatesVec_->push_back(state);
+      finalStates_->AddElement(state);
     }
   }
 
@@ -283,13 +278,17 @@ public: // public methods
     SymbolBackTranslFunc                   symbolBackTransl
   ) const
   {
-    assert(SymTransitionsVec_   != nullptr);
-    assert(SymInitialStatesVec_ != nullptr);
-    assert(SymFinalStatesVec_   != nullptr);
+    assert(transitions_   != nullptr);
+    assert(initialStates_ != nullptr);
+    assert(finalStates_   != nullptr);
+
+    AssignmentList transitionList = transitions_->GetAllElements();
+    AssignmentList initialStateList = initialStates_->GetAllElements();
+    AssignmentList finalStatesList = finalStates_->GetAllElements();
 
     AutDescription desc;
 
-    for (auto transition : *SymTransitionsVec_)
+    for (auto transition : transitionList)
     { // transitions
       StateType lstate;
       SymbolType symbol;
@@ -310,7 +309,7 @@ public: // public methods
       desc.transitions.insert(triple);
     }
 
-    for (auto initialState : *SymInitialStatesVec_)
+    for (auto initialState : initialStateList)
     { // initial states
       StateType state = SymbolicVarAsgn2Size_t(initialState);
       std::string strstate = stateBackTransl(state);
@@ -324,7 +323,7 @@ public: // public methods
       desc.transitions.insert(triple);
     }
 
-    for (auto finalState : *SymFinalStatesVec_)
+    for (auto finalState : finalStatesList)
     { // final states
       StateType state = SymbolicVarAsgn2Size_t(finalState);
       std::string strstate = stateBackTransl(state);
@@ -396,7 +395,7 @@ private: // private methods
    * @param[in] rstate An internal representation of a right-side state.
    * @return A merged transition.
    */
-  SymTransitionType & MergeTransition(
+  SymbolicVarAsgn MergeTransition(
     const StateType & lstate,
     const SymbolType & symbol,
     const StateType & rstate
@@ -409,10 +408,10 @@ private: // private methods
    * @param[in] rstate A symbolic representation of a right-side state.
    * @return A merged transition.
    */
-  SymTransitionType & MergeTransition(
-    const SymStateType & lstate,
-    const SymSymbolType & symbol,
-    const SymStateType & rstate
+  SymbolicVarAsgn MergeTransition(
+    const SymbolicVarAsgn & lstate,
+    const SymbolicVarAsgn & symbol,
+    const SymbolicVarAsgn & rstate
   ) const;
 
   /**
@@ -423,7 +422,7 @@ private: // private methods
    * @param[out] rstate An output internal representation of a right-side state.
    */
   void SplitTransition(
-    const SymTransitionType & transition,
+    const SymbolicVarAsgn & transition,
     StateType & lstate,
     SymbolType & symbol,
     StateType & rstate
@@ -437,7 +436,7 @@ private: // private methods
    * @param[out] rstate An output string representation of a right-side state.
    */
   void SplitTransition(
-    const SymTransitionType & transition,
+    const SymbolicVarAsgn & transition,
     std::string & lstate,
     std::string & symbol,
     std::string & rstate

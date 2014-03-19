@@ -513,6 +513,59 @@ public:   // public methods
 		return OndriksMTBDD(newRoot, defaultValue_);
 	}
 
+  /**
+   * @brief Traverse mtbdd and obtain all valid paths.
+   * @param[out] vec Vector to fill with valid paths.
+   */
+  void TraverseMtbdd(
+    SymbolicVarAsgn::AssignmentList & vec
+  ) const
+  {
+    TraverseMtbdd(getRoot(), vec, SymbolicVarAsgn());
+  }
+
+  /**
+   * @brief Recursive part of TraverseMtbdd.
+   * @param[in] node Node to traverse.
+   * @param[out] vec Vector to fill with valid paths.
+   * @param[in,out] asgn Path in-process.
+   */
+  void TraverseMtbdd(
+    NodePtrType node
+    SymbolicVarAsgn::AssignmentList & vec
+    SymbolicVarAsgn & asgn
+  ) const
+  {
+    assert(!IsNull(node));
+
+		if (IsInternal(node))
+    { // internal
+      VarType & var = GetVarFromInternal(node); // node variable
+      asgn.AddVariablesUpTo(var - asgn.length()); // add don't care variables
+
+      NodePtrType low = GetLowFromInternal(node);
+      assert(!IsNull(low);
+      
+      SymbolicVarAsgn asgnLow = asgn.append(SymbolicVarAsgn("0"));
+      TraverseMtbdd(low, vec, asgn); // traverse low
+
+      NodePtrType high = GetHighFromInternal(node)
+      assert(!IsNull(high));
+
+      SymbolicVarAsgn asgnHigh = asgn.append(SymbolicVarAsgn("1"));
+      TraverseMtbdd(high, vec, asgn); // traverse high
+    }
+
+    else
+    { // terminal
+      assert(IsLeaf(node));
+
+      if (GetDataFromLeaf(node) != defaultValue_)
+      { // asgn is valid
+        vec.push_back(asgn);
+      }
+    }
+  }
 
 	~OndriksMTBDD()
 	{

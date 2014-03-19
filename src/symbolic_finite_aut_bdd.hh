@@ -10,7 +10,7 @@
 #ifndef _VATA_SYMBOLIC_FINITE_AUT_BDD_HH_
 #define _VATA_SYMBOLIC_FINITE_AUT_BDD_HH_
 
-#include <vata/symbolic_finite_aut_core.hh>
+#include <vata/sym_var_asgn.hh>
 #include "mtbdd/ondriks_mtbdd.hh"
 #include "mtbdd/apply2func.hh"
 
@@ -31,7 +31,10 @@ GCC_DIAG_ON(effc++)
 private: // data types
 
   /// @brief A symbolic representation.
-  using SymbolicVarAsgn = VATA::SymbolicFiniteAutCore::SymbolicVarAsgn;
+  using SymbolicVarAsgn = VATA::SymbolicVarAsgn;
+
+  /// @brief A symbolic representation.
+  using AssignmentList = VATA::SymbolicVarAsgn::AssignmentList;
 
   /// @brief BDD is represented by a boolean MTBDD.
   using BDD = VATA::MTBDDPkg::OndriksMTBDD<bool>;
@@ -59,8 +62,8 @@ private: // apply functors
 
     /**
      * @brief Apply operation.
-     * @param lhs First element for union.
-     * @param rhs Second element for union.
+     * @param[in] lhs First element for union.
+     * @param[in] rhs Second element for union.
      * @return Union of given elements.
      */
 		bool ApplyOperation(
@@ -88,8 +91,8 @@ private: // apply functors
 
     /**
      * @brief Apply operation.
-     * @param lhs First element for intersection.
-     * @param rhs Second element for intersection.
+     * @param[in] lhs First element for intersection.
+     * @param[in] rhs Second element for intersection.
      * @return Intersection of given elements.
      */
 		bool ApplyOperation(
@@ -117,8 +120,8 @@ private: // apply functors
 
     /**
      * @brief Apply operation.
-     * @param lhs First element for consequence.
-     * @param rhs Second element for consequence.
+     * @param[in] lhs First element for consequence.
+     * @param[in] rhs Second element for consequence.
      * @return Consequence of given elements.
      */
 		bool ApplyOperation(
@@ -148,8 +151,8 @@ private: // apply functors
 
     /**
      * @brief Apply operation.
-     * @param lhs First element for equivalence.
-     * @param rhs Second element for equivalence.
+     * @param[in] lhs First element for equivalence.
+     * @param[in] rhs Second element for equivalence.
      * @return Equivalence of given elements.
      */
 		bool ApplyOperation(
@@ -189,15 +192,7 @@ public: // instantiation
    * @param[in] asgn A symbolic item to be represented by BDD.
    */
   explicit SymbolicFiniteAutBDD(
-    const SymbolicVarAsgn & asgn
-  );
-
-  /**
-   * @brief Create constructor.
-   * @param[in] vec A vector (e.g. final states) to be represented by BDD.
-   */
-  explicit SymbolicFiniteAutBDD(
-    const std::vector<SymbolicVarAsgn> & vec
+    const SymbolicVarAsgn & asgn = SymbolicVarAsgn("")
   );
 
   /// @brief Default destructor.
@@ -220,6 +215,24 @@ public: // instantiation
   SymbolicFiniteAutBDD & operator=(
     SymbolicFiniteAutBDD && rhs
   );
+
+public: // methods
+
+  /**
+   * @brief Adds an element to BDD.
+   * @param[in] asgn An element to be added.
+   */
+  void AddElement(
+    const SymbolicVarAsgn & asgn
+  );
+
+  /**
+   * @brief Traverse BDD and obtain all valid paths.
+   * @param[out] vec Vector to fill with valid paths.
+   */
+  void GetAllElements(
+    AssignmentList & vec
+  ) const;
 };
 
 #endif // _VATA_SYMBOLIC_FINITE_AUT_BDD_HH_

@@ -23,27 +23,10 @@ SymbolicFiniteAutBDD::SymbolicFiniteAutBDD(
   bdd.mtbdd_ = nullptr;
 }
 
-explicit SymbolicFiniteAutBDD::SymbolicFiniteAutBDD(
+SymbolicFiniteAutBDD::SymbolicFiniteAutBDD(
   const SymbolicVarAsgn & asgn
 ) : mtbdd_(new SymbolicFiniteAutBDD::BDD(asgn, true, false))
 {}
-
-explicit SymbolicFiniteAutBDD::SymbolicFiniteAutBDD(
-  const std::vector<SymbolicVarAsgn> & vec
-)
-{
-  if (!vec.empty())
-  {
-    UnionApplyFunctor unionfunc;
-    mtbdd_(new BDD(vec[0], true, false))
-
-    for (auto item : vec)
-    {
-      BDD rhs = new BDD(item, true, false);
-      mtbdd_ = unionfunc(mtbdd_, rhs);
-    }
-  }
-}
 
 SymbolicFiniteAutBDD::~SymbolicFiniteAutBDD()
 {}
@@ -73,4 +56,21 @@ SymbolicFiniteAutBDD & SymbolicFiniteAutBDD::operator=(
   mtbdd_ = std::move(rhs.mtbdd_);
 
   return *this;
+}
+
+void SymbolicFiniteAutBDD::AddElement(
+  const SymbolicVarAsgn & asgn
+)
+{
+  assert(mtbdd_ != nullptr);
+
+  UnionApplyFunctor unionFunc;
+  mtbdd_ = unionFunc(mtbdd_, BDD(asgn, true, false));
+}
+
+SymbolicFiniteAutBDD::AssignmentList SymbolicFiniteAutBDD::GetAllElements() const
+{
+  assert(mtbdd_ != nullptr);
+
+  return mtbdd_->TraverseMtbdd(vec);
 }

@@ -86,6 +86,7 @@ add_library(libvata STATIC
   explicit_tree_useless.cc
   explicit_tree_sim.cc
   symbolic_finite_aut.cc
+  symbolic_finite_aut_bdd.cc
   symbolic_finite_aut_core.cc
   convert.cc
   incl_param.cc

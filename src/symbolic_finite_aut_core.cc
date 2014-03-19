@@ -14,31 +14,31 @@ using VATA::SymbolicFiniteAutCore;
 SymbolicFiniteAutCore::SymbolicFiniteAutCore()
   : stateVars_(0),
     symbolVars_(0),
-    SymTransitionsVec_(new SymTransitionsVec()),
-    SymInitialStatesVec_(new SymInitialStatesVec()),
-    SymFinalStatesVec_(new SymFinalStatesVec())
+    transitions_(new SymbolicFiniteAutBDD),
+    initialStates_(new SymbolicFiniteAutBDD),
+    finalStates_(new SymbolicFiniteAutBDD)
 {}
 
 SymbolicFiniteAutCore::SymbolicFiniteAutCore(
   const SymbolicFiniteAutCore & core
 ) : stateVars_(core.stateVars_),
     symbolVars_(core.symbolVars_),
-    SymTransitionsVec_(new SymTransitionsVec(*core.SymTransitionsVec_)),
-    SymInitialStatesVec_(new SymInitialStatesVec(*core.SymInitialStatesVec_)),
-    SymFinalStatesVec_(new SymFinalStatesVec(*core.SymFinalStatesVec_))
+    transitions_(new SymbolicFiniteAutBDD(*core.transitions_)),
+    initialStates_(new SymbolicFiniteAutBDD(*core.initialStates_)),
+    finalStates_(new SymbolicFiniteAutBDD(*core.finalStates_))
 {}
 
 SymbolicFiniteAutCore::SymbolicFiniteAutCore(
   SymbolicFiniteAutCore && core
 ) : stateVars_(std::move(core.stateVars_)),
     symbolVars_(std::move(core.symbolVars_)),
-    SymTransitionsVec_(std::move(core.SymTransitionsVec_)),
-    SymInitialStatesVec_(std::move(core.SymInitialStatesVec_)),
-    SymFinalStatesVec_(std::move(core.SymFinalStatesVec_))
+    transitions_(std::move(core.transitions_)),
+    initialStates_(std::move(core.initialStates_)),
+    finalStates_(std::move(core.finalStates_))
 {
-  core.SymTransitionsVec_   = nullptr;
-  core.SymInitialStatesVec_ = nullptr;
-  core.SymFinalStatesVec_   = nullptr;
+  core.transitions_   = nullptr;
+  core.initialStates_ = nullptr;
+  core.finalStates_   = nullptr;
 }
 
 SymbolicFiniteAutCore::~SymbolicFiniteAutCore()
@@ -50,11 +50,11 @@ SymbolicFiniteAutCore & SymbolicFiniteAutCore::operator=(
 {
   if (this != & rhs)
   { // if two automata differs
-    this->stateVars_            = rhs.stateVars_;
-    this->symbolVars_           = rhs.symbolVars_;
-    *this->SymTransitionsVec_   = *rhs.SymTransitionsVec_;
-    *this->SymInitialStatesVec_ = *rhs.SymInitialStatesVec_;
-    *this->SymFinalStatesVec_   = *rhs.SymFinalStatesVec_;
+    this->stateVars_      = rhs.stateVars_;
+    this->symbolVars_     = rhs.symbolVars_;
+    *this->transitions_   = *rhs.transitions_;
+    *this->initialStates_ = *rhs.initialStates_;
+    *this->finalStates_   = *rhs.finalStates_;
   }
 
   return *this;
@@ -66,11 +66,11 @@ SymbolicFiniteAutCore & SymbolicFiniteAutCore::operator=(
 {
   assert(this != & rhs);
 
-  this->stateVars_           = std::move(rhs.stateVars_);
-  this->symbolVars_          = std::move(rhs.symbolVars_);
-  this->SymTransitionsVec_   = std::move(rhs.SymTransitionsVec_);
-  this->SymInitialStatesVec_ = std::move(rhs.SymInitialStatesVec_);
-  this->SymFinalStatesVec_   = std::move(rhs.SymFinalStatesVec_);
+  this->stateVars_     = std::move(rhs.stateVars_);
+  this->symbolVars_    = std::move(rhs.symbolVars_);
+  this->transitions_   = std::move(rhs.transitions_);
+  this->initialStates_ = std::move(rhs.initialStates_);
+  this->finalStates_   = std::move(rhs.finalStates_);
 
   return *this;
 }
@@ -79,9 +79,9 @@ void SymbolicFiniteAutCore::LoadFromAutDescSymbolic(
   const AutDescription & desc
 )
 {
-  assert(this->SymTransitionsVec_   != nullptr);
-  assert(this->SymInitialStatesVec_ != nullptr);
-  assert(this->SymFinalStatesVec_   != nullptr);
+  assert(this->transitions_   != nullptr);
+  assert(this->initialStates_ != nullptr);
+  assert(this->finalStates_   != nullptr);
 
   for (auto transition : desc.transitions)
   { // transitions and initial states
@@ -97,9 +97,9 @@ void SymbolicFiniteAutCore::LoadFromAutDescSymbolic(
         throw std::runtime_error("Number of variables in states differs.");
       }
 
-      SymStateType state = SymbolicVarAsgn(transition.third);
+      SymbolicVarAsgn state(transition.third);
 
-      this->SymInitialStatesVec_->push_back(state);
+      this->initialStates_->AddElement(state);
     }
 
     else if (transition.first.size() > 1)
@@ -139,12 +139,12 @@ void SymbolicFiniteAutCore::LoadFromAutDescSymbolic(
         throw std::runtime_error("Number of variables in states differs.");
       }
 
-      SymStateType lstate = SymbolicVarAsgn(transition.first.front());
-      SymSymbolType symbol = SymbolicVarAsgn(transition.second);
-      SymStateType rstate = SymbolicVarAsgn(transition.third);
-      SymTransitionType triple = this->MergeTransition(lstate, symbol, rstate);
+      SymbolicVarAsgn lstate(transition.first.front());
+      SymbolicVarAsgn symbol(transition.second);
+      SymbolicVarAsgn rstate(transition.third);
+      SymbolicVarAsgn triple = this->MergeTransition(lstate, symbol, rstate);
 
-      this->SymTransitionsVec_->push_back(triple);
+      this->transitions_->AddElement(triple);
     }
   }
 
@@ -160,21 +160,25 @@ void SymbolicFiniteAutCore::LoadFromAutDescSymbolic(
       throw std::runtime_error("Number of variables in states differs.");
     }
 
-    SymStateType state = SymbolicVarAsgn(finalState);
+    SymbolicVarAsgn state(finalState);
 
-    this->SymFinalStatesVec_->push_back(state);
+    this->finalStates_->AddElement(state);
   }
 }
 
 SymbolicFiniteAutCore::AutDescription SymbolicFiniteAutCore::DumpToAutDescSymbolic() const
 {
-  assert(this->SymTransitionsVec_   != nullptr);
-  assert(this->SymInitialStatesVec_ != nullptr);
-  assert(this->SymFinalStatesVec_   != nullptr);
+  assert(this->transitions_   != nullptr);
+  assert(this->initialStates_ != nullptr);
+  assert(this->finalStates_   != nullptr);
+
+  AssignmentList transitionList = transitions_->GetAllElements();
+  AssignmentList initialStateList = initialStates_->GetAllElements();
+  AssignmentList finalStatesList = finalStates_->GetAllElements();
 
   AutDescription desc;
 
-  for (auto transition : *this->SymTransitionsVec_)
+  for (auto transition : transitionList)
   { // transitions
     std::string lstate;
     std::string symbol;
@@ -192,7 +196,7 @@ SymbolicFiniteAutCore::AutDescription SymbolicFiniteAutCore::DumpToAutDescSymbol
     desc.transitions.insert(triple);
   }
 
-  for (auto initialState : *this->SymInitialStatesVec_)
+  for (auto initialState : initialStateList)
   { // initial states
     std::string state = initialState.ToString();
 
@@ -207,7 +211,7 @@ SymbolicFiniteAutCore::AutDescription SymbolicFiniteAutCore::DumpToAutDescSymbol
     desc.transitions.insert(triple);
   }
 
-  for (auto finalState : *this->SymFinalStatesVec_)
+  for (auto finalState : finalStates_)
   { // final states
     std::string state = finalState.ToString();
 
@@ -223,7 +227,7 @@ void SymbolicFiniteAutCore::AddTransition(
   const std::string & rstate
 )
 {
-  assert(this->SymTransitionsVec_ != nullptr);
+  assert(this->transitions_ != nullptr);
 
   if (this->stateVars_ == 0)
   { // state is new
@@ -255,19 +259,19 @@ void SymbolicFiniteAutCore::AddTransition(
     throw std::runtime_error("Number of variables in states differs.");
   }
 
-  SymStateType symlstate = SymbolicVarAsgn(lstate);
-  SymSymbolType symsymbol = SymbolicVarAsgn(symbol);
-  SymStateType symrstate = SymbolicVarAsgn(rstate);
-  SymTransitionType triple = this->MergeTransition(symlstate, symsymbol, symrstate);
+  SymbolicVarAsgn symlstate(lstate);
+  SymbolicVarAsgn symsymbol(symbol);
+  SymbolicVarAsgn symrstate(rstate);
+  SymbolicVarAsgn triple = this->MergeTransition(symlstate, symsymbol, symrstate);
 
-  this->SymTransitionsVec_->push_back(triple);
+  this->transitions_->AddElement(triple);
 }
 
 void SymbolicFiniteAutCore::AddInitialState(
   const std::string & state
 )
 {
-  assert(this->SymInitialStatesVec_ != nullptr);
+  assert(this->initialStates_ != nullptr);
 
   if (this->stateVars_ == 0)
   { // state is new
@@ -279,16 +283,16 @@ void SymbolicFiniteAutCore::AddInitialState(
     throw std::runtime_error("Number of variables in states differs.");
   }
 
-  SymStateType symstate = SymbolicVarAsgn(state);
+  SymbolicVarAsgn symstate(state);
 
-  this->SymInitialStatesVec_->push_back(symstate);
+  this->initialStates_->AddElement(symstate);
 }
 
 void SymbolicFiniteAutCore::AddFinalState(
   const std::string & state
 )
 {
-  assert(this->SymFinalStatesVec_ != nullptr);
+  assert(this->finalStates_ != nullptr);
 
   if (this->stateVars_ == 0)
   { // state is new
@@ -300,9 +304,9 @@ void SymbolicFiniteAutCore::AddFinalState(
     throw std::runtime_error("Number of variables in states differs.");
   }
 
-  SymStateType symstate = SymbolicVarAsgn(state);
+  SymbolicVarAsgn symstate(state);
 
-  this->SymFinalStatesVec_->push_back(symstate);
+  this->finalStates_->AddElement(symstate);
 }
 
 size_t SymbolicFiniteAutCore::SymbolicVarAsgn2Size_t(
@@ -336,34 +340,34 @@ size_t SymbolicFiniteAutCore::SymbolicVarAsgn2Size_t(
   return result;
 }
 
-SymbolicFiniteAutCore::SymbolicVarAsgn & SymbolicFiniteAutCore::MergeTransition(
+SymbolicFiniteAutCore::SymbolicVarAsgn SymbolicFiniteAutCore::MergeTransition(
   const StateType & lstate,
   const SymbolType & symbol,
   const StateType & rstate
 ) const
 {
-  SymStateType symLeftState  = SymbolicVarAsgn(this->stateVars_, lstate);
-  SymSymbolType symSymbol    = SymbolicVarAsgn(this->symbolVars_, symbol);
-  SymStateType symRightState = SymbolicVarAsgn(this->stateVars_, rstate);
+  SymbolicVarAsgn symLeftState(this->stateVars_, lstate);
+  SymbolicVarAsgn symSymbol(this->symbolVars_, symbol);
+  SymbolicVarAsgn symRightState(this->stateVars_, rstate);
 
   return this->MergeTransition(symLeftState, symSymbol, symRightState);
 }
 
-SymbolicFiniteAutCore::SymTransitionType & SymbolicFiniteAutCore::MergeTransition(
-  const SymStateType & lstate,
-  const SymSymbolType & symbol,
-  const SymStateType & rstate
+SymbolicFiniteAutCore::SymbolicVarAsgn SymbolicFiniteAutCore::MergeTransition(
+  const SymbolicVarAsgn & lstate,
+  const SymbolicVarAsgn & symbol,
+  const SymbolicVarAsgn & rstate
 ) const
 {
-  SymbolicVarAsgn * asgn  = new SymbolicVarAsgn(lstate);
+  SymbolicVarAsgn asgn(lstate);
   asgn->append(symbol);
   asgn->append(rstate);
 
-  return *asgn;
+  return asgn;
 }
 
 void SymbolicFiniteAutCore::SplitTransition(
-  const SymTransitionType & transition,
+  const SymbolicVarAsgn & transition,
   StateType & lstate,
   SymbolType & symbol,
   StateType & rstate
@@ -381,7 +385,7 @@ void SymbolicFiniteAutCore::SplitTransition(
 }
 
 void SymbolicFiniteAutCore::SplitTransition(
-  const SymTransitionType & transition,
+  const SymbolicVarAsgn & transition,
   std::string & lstate,
   std::string & symbol,
   std::string & rstate
