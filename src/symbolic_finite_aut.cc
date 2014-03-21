@@ -24,8 +24,7 @@ SymbolicFiniteAut::SymbolicFiniteAut(
 
 SymbolicFiniteAut::SymbolicFiniteAut(
   SymbolicFiniteAut && aut
-)
-  : core_(std::move(aut.core_))
+) : core_(std::move(aut.core_))
 {
   aut.core_ = nullptr;
 }

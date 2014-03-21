@@ -12,7 +12,7 @@
 
 #include <vata/symbolic_finite_aut.hh>
 #include <vata/util/triple.hh>
-#include "symbolic_finite_aut_bdd"
+#include "symbolic_finite_aut_bdd.hh"
 
 /// @brief VATA library namespace.
 namespace VATA
@@ -90,13 +90,13 @@ private: // private data types
   using FinalStatesBDD = SymbolicFiniteAutBDD;
 
   /// @brief TransitionsBDD pointer for transitions.
-  using TransitionsBDDPtr = std::unique<TransitionsBDD>;
+  using TransitionsBDDPtr = std::shared_ptr<TransitionsBDD>;
 
-  /// @brief InitialStatesBDD pointer for transitions.
-  using InitialStatesBDDPtr = std::unique<InitialStatesBDD>;
+  /// @brief InitialStatesBDD pointer for initial states.
+  using InitialStatesBDDPtr = std::shared_ptr<InitialStatesBDD>;
 
-  /// @brief FinalStatesBDD pointer for transitions.
-  using FinalStatesBDDPtr = std::unique<FinalStatesBDD>;
+  /// @brief FinalStatesBDD pointer for final states.
+  using FinalStatesBDDPtr = std::shared_ptr<FinalStatesBDD>;
 
 private: // data members
 
@@ -229,7 +229,7 @@ public: // public methods
     assert(transitions_   != nullptr);
     assert(initialStates_ != nullptr);
     assert(finalStates_   != nullptr);
-
+std::cout << "LOOP TRANSITIONS" << std::endl << std::endl;
     for (auto transition : TransitionsVec)
     { // transitions
       SymbolicVarAsgn triple = MergeTransition(
@@ -238,21 +238,21 @@ public: // public methods
         transition.third
       );
 
-      transitions_->AddElement(triple);
+      transitions_->AddAssignment(triple);
     }
-
+std::cout << "LOOP INITIAL STATES" << std::endl << std::endl;
     for (auto initialState : InitialStatesSet)
     { // initial states
       SymbolicVarAsgn state(stateVars_, initialState);
 
-      initialStates_->AddElement(state);
+      initialStates_->AddAssignment(state);
     }
-
+std::cout << "LOOP FINAL STATES" << std::endl << std::endl;
     for (auto finalState : FinalStatesSet)
     { // final states
       SymbolicVarAsgn state(stateVars_, finalState);
 
-      finalStates_->AddElement(state);
+      finalStates_->AddAssignment(state);
     }
   }
 
@@ -282,9 +282,9 @@ public: // public methods
     assert(initialStates_ != nullptr);
     assert(finalStates_   != nullptr);
 
-    AssignmentList transitionList = transitions_->GetAllElements();
-    AssignmentList initialStateList = initialStates_->GetAllElements();
-    AssignmentList finalStatesList = finalStates_->GetAllElements();
+    AssignmentList transitionList = transitions_->GetAllAssignments();
+    AssignmentList initialStateList = initialStates_->GetAllAssignments();
+    AssignmentList finalStatesList = finalStates_->GetAllAssignments();
 
     AutDescription desc;
 

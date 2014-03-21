@@ -514,54 +514,59 @@ public:   // public methods
 	}
 
   /**
-   * @brief Traverse mtbdd and obtain all valid paths.
-   * @param[out] vec Vector to fill with valid paths.
+   * @brief Obtains all assignments.
+   * @return A list of assignments.
    */
-  void TraverseMtbdd(
-    SymbolicVarAsgn::AssignmentList & vec
-  ) const
+  SymbolicVarAsgn::AssignmentList GetAllAssignments() const
   {
-    TraverseMtbdd(getRoot(), vec, SymbolicVarAsgn());
+    SymbolicVarAsgn::AssignmentList vec;
+
+    if (IsLeaf(root_) && (GetDataFromLeaf(root_) != defaultValue_))
+    {
+      SymbolicVarAsgn asgn("1");
+      RecTraverse(root_, asgn, vec);
+    }
+
+    else if(IsInternal(root_))
+    {
+      SymbolicVarAsgn asgn(GetVarFromInternal(root_) + 1);
+      RecTraverse(root_, asgn, vec);
+    }
+
+    return vec;
   }
 
   /**
-   * @brief Recursive part of TraverseMtbdd.
+   * @brief Recursive traverse of mtbdd.
    * @param[in] node Node to traverse.
+   * @param[in] asgn Assignment in-process.
    * @param[out] vec Vector to fill with valid paths.
-   * @param[in,out] asgn Path in-process.
    */
-  void TraverseMtbdd(
-    NodePtrType node
+  void RecTraverse(
+    const NodePtrType node,
+    SymbolicVarAsgn & asgn,
     SymbolicVarAsgn::AssignmentList & vec
-    SymbolicVarAsgn & asgn
   ) const
   {
     assert(!IsNull(node));
 
 		if (IsInternal(node))
-    { // internal
-      VarType & var = GetVarFromInternal(node); // node variable
-      asgn.AddVariablesUpTo(var - asgn.length()); // add don't care variables
+    { // internal node
+      SymbolicVarAsgn asgnLow(asgn);
+      SymbolicVarAsgn asgnHigh(asgn);
+      asgnLow.SetIthVariableValue(GetVarFromInternal(node), SymbolicVarAsgn::ZERO);
+      asgnHigh.SetIthVariableValue(GetVarFromInternal(node), SymbolicVarAsgn::ONE);
 
-      NodePtrType low = GetLowFromInternal(node);
-      assert(!IsNull(low);
-      
-      SymbolicVarAsgn asgnLow = asgn.append(SymbolicVarAsgn("0"));
-      TraverseMtbdd(low, vec, asgn); // traverse low
-
-      NodePtrType high = GetHighFromInternal(node)
-      assert(!IsNull(high));
-
-      SymbolicVarAsgn asgnHigh = asgn.append(SymbolicVarAsgn("1"));
-      TraverseMtbdd(high, vec, asgn); // traverse high
+      RecTraverse(GetLowFromInternal(node), asgnLow, vec); // traverse low successor
+      RecTraverse(GetHighFromInternal(node), asgnHigh, vec); // traverse high successor
     }
 
     else
-    { // terminal
+    { // terminal node
       assert(IsLeaf(node));
 
       if (GetDataFromLeaf(node) != defaultValue_)
-      { // asgn is valid
+      { // assignment is valid
         vec.push_back(asgn);
       }
     }

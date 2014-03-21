@@ -13,11 +13,11 @@ using VATA::SymbolicFiniteAutBDD;
 
 SymbolicFiniteAutBDD::SymbolicFiniteAutBDD(
   const SymbolicFiniteAutBDD & bdd
-) : mtbdd_(new SymbolicFiniteAutBDD::BDD(*bdd.mtbdd_))
+) : mtbdd_(new BDD(*bdd.mtbdd_))
 {}
 
 SymbolicFiniteAutBDD::SymbolicFiniteAutBDD(
-  const SymbolicFiniteAutBDD && bdd
+  SymbolicFiniteAutBDD && bdd
 ) : mtbdd_(std::move(bdd.mtbdd_))
 {
   bdd.mtbdd_ = nullptr;
@@ -25,7 +25,7 @@ SymbolicFiniteAutBDD::SymbolicFiniteAutBDD(
 
 SymbolicFiniteAutBDD::SymbolicFiniteAutBDD(
   const SymbolicVarAsgn & asgn
-) : mtbdd_(new SymbolicFiniteAutBDD::BDD(asgn, true, false))
+) : mtbdd_(new BDD(asgn, true, false))
 {}
 
 SymbolicFiniteAutBDD::~SymbolicFiniteAutBDD()
@@ -37,9 +37,9 @@ SymbolicFiniteAutBDD & SymbolicFiniteAutBDD::operator=(
 {
   if (this != &rhs)
   { // if two automata differs
-    assert(mtbdd_ != nullptr);
+    assert(this->mtbdd_ != nullptr);
 
-    *mtbdd_ = *rhs.mtbdd_;
+    *this->mtbdd_ = *rhs.mtbdd_;
   }
 
   return *this;
@@ -50,27 +50,48 @@ SymbolicFiniteAutBDD & SymbolicFiniteAutBDD::operator=(
 )
 {
   assert(this != &rhs);
-  assert(mtbdd_ != nullptr);
+  assert(this->mtbdd_ != nullptr);
   assert(rhs.mtbdd_ != nullptr);
 
-  mtbdd_ = std::move(rhs.mtbdd_);
+  this->mtbdd_ = std::move(rhs.mtbdd_);
 
   return *this;
 }
 
-void SymbolicFiniteAutBDD::AddElement(
+void SymbolicFiniteAutBDD::AddAssignment(
   const SymbolicVarAsgn & asgn
 )
 {
-  assert(mtbdd_ != nullptr);
+  assert(this->mtbdd_ != nullptr);
 
+  std::cout << "ASGN: " << asgn.ToString() << std::endl << std::endl;
+
+  std::vector<const BDD *> vector;
   UnionApplyFunctor unionFunc;
-  mtbdd_ = unionFunc(mtbdd_, BDD(asgn, true, false));
+
+  const BDD * bdd1 = new BDD(*this->mtbdd_);
+  vector.push_back(bdd1);
+  std::cout << "BEFORE" << std::endl << std::endl << BDD::DumpToDot(vector) << std::endl << std::endl;
+  vector.clear();
+
+  BDD * asgnBDD = new BDD(asgn, true, false);
+
+  const BDD * bdd3 = new BDD(*asgnBDD);
+  vector.push_back(bdd3);
+  std::cout << "ASGN BDD" << std::endl << std::endl << BDD::DumpToDot(vector) << std::endl << std::endl;
+  vector.clear();
+
+  *this->mtbdd_ = unionFunc(*this->mtbdd_, *asgnBDD);
+
+  const BDD * bdd2 = new BDD(*this->mtbdd_);
+  vector.push_back(bdd2);
+  std::cout << "AFTER" << std::endl << std::endl << BDD::DumpToDot(vector) << std::endl << std::endl;
+  vector.clear();
 }
 
-SymbolicFiniteAutBDD::AssignmentList SymbolicFiniteAutBDD::GetAllElements() const
+SymbolicFiniteAutBDD::AssignmentList SymbolicFiniteAutBDD::GetAllAssignments() const
 {
-  assert(mtbdd_ != nullptr);
+  assert(this->mtbdd_ != nullptr);
 
-  return mtbdd_->TraverseMtbdd(vec);
+  return this->mtbdd_->GetAllAssignments();
 }

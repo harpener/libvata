@@ -28,7 +28,7 @@ class VATA::SymbolicFiniteAutBDD
 
 GCC_DIAG_ON(effc++)
 
-private: // data types
+public: // public data types
 
   /// @brief A symbolic representation.
   using SymbolicVarAsgn = VATA::SymbolicVarAsgn;
@@ -36,15 +36,17 @@ private: // data types
   /// @brief A symbolic representation.
   using AssignmentList = VATA::SymbolicVarAsgn::AssignmentList;
 
+private: // private data types
+
   /// @brief BDD is represented by a boolean MTBDD.
   using BDD = VATA::MTBDDPkg::OndriksMTBDD<bool>;
 
   /// @brief BDD pointer.
-  using BDDPtr = std::unique_ptr<BDD>;
+  using BDDPtr = std::shared_ptr<BDD>;
 
 private: // apply functors
 
-	GCC_DIAG_OFF(effc++)    // suppress missing virtual destructor warning
+	GCC_DIAG_OFF(effc++) // suppress missing virtual destructor warning
 
   /// @brief Apply with union.
 	class UnionApplyFunctor
@@ -70,10 +72,12 @@ private: // apply functors
       const bool & lhs,
       const bool & rhs
     )
-		{
+    {
 			return (lhs | rhs);
 		}
 	};
+
+  GCC_DIAG_OFF(effc++) // suppress missing virtual destructor warning
 
   /// @brief Apply with intersection.
 	class IntersectApplyFunctor
@@ -104,6 +108,8 @@ private: // apply functors
 		}
 	};
 
+  GCC_DIAG_OFF(effc++) // suppress missing virtual destructor warning
+
   /// @brief Apply with consequence.
 	class ConsequenceApplyFunctor
     : public VATA::MTBDDPkg::Apply2Functor<
@@ -133,9 +139,9 @@ private: // apply functors
 		}
 	};
 
-  /**
-   * @brief Apply with equivalence.
-   */
+  GCC_DIAG_OFF(effc++) // suppress missing virtual destructor warning
+
+  /// @brief Apply with equivalence.
 	class EquivalenceApplyFunctor
     : public VATA::MTBDDPkg::Apply2Functor<
         EquivalenceApplyFunctor,
@@ -219,20 +225,18 @@ public: // instantiation
 public: // methods
 
   /**
-   * @brief Adds an element to BDD.
-   * @param[in] asgn An element to be added.
+   * @brief Adds an assignment to BDD.
+   * @param[in] asgn An assignment to be added.
    */
-  void AddElement(
+  void AddAssignment(
     const SymbolicVarAsgn & asgn
   );
 
   /**
    * @brief Traverse BDD and obtain all valid paths.
-   * @param[out] vec Vector to fill with valid paths.
+   * @return A list of all valid path in BDD.
    */
-  void GetAllElements(
-    AssignmentList & vec
-  ) const;
+  AssignmentList GetAllAssignments() const;
 };
 
 #endif // _VATA_SYMBOLIC_FINITE_AUT_BDD_HH_

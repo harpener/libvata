@@ -181,6 +181,18 @@ public:   // Public methods
 		mtbdd1_ = &mtbdd1;
 		mtbdd2_ = &mtbdd2;
 
+    std::vector<const MTBDD1Type *> vector1;
+    std::vector<const MTBDD2Type *> vector2;
+    std::vector<const MTBDDOutType *> vector3;
+    const MTBDD1Type * bdd1 = new MTBDD1Type(mtbdd1);
+    vector1.push_back(bdd1);
+    std::cout << "mtbdd1" << std::endl << std::endl << MTBDD1Type::DumpToDot(vector1) << std::endl << std::endl;
+    vector1.clear();
+    const MTBDD2Type * bdd2 = new MTBDD2Type(mtbdd2);
+    vector2.push_back(bdd2);
+    std::cout << "mtbdd2" << std::endl << std::endl << MTBDD2Type::DumpToDot(vector2) << std::endl << std::endl;
+    vector2.clear();
+
 		// clear the cache
 		ht.clear();
 
@@ -192,8 +204,14 @@ public:   // Public methods
 		DataOutType defaultValue = makeBase().ApplyOperation(
 			mtbdd1_->GetDefaultValue(), mtbdd2_->GetDefaultValue());
 
+    MTBDDOutType out = MTBDDOutType(root, defaultValue);
+    const MTBDDOutType * bdd3 = new MTBDDOutType(out);
+    vector3.push_back(bdd3);
+    std::cout << "out" << std::endl << std::endl << MTBDDOutType::DumpToDot(vector3) << std::endl << std::endl;
+    vector3.clear();
+
 		// wrap it all up
-		return MTBDDOutType(root, defaultValue);
+		return out;
 	}
 
 protected:// Protected methods

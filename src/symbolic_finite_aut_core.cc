@@ -99,7 +99,7 @@ void SymbolicFiniteAutCore::LoadFromAutDescSymbolic(
 
       SymbolicVarAsgn state(transition.third);
 
-      this->initialStates_->AddElement(state);
+      this->initialStates_->AddAssignment(state);
     }
 
     else if (transition.first.size() > 1)
@@ -144,7 +144,7 @@ void SymbolicFiniteAutCore::LoadFromAutDescSymbolic(
       SymbolicVarAsgn rstate(transition.third);
       SymbolicVarAsgn triple = this->MergeTransition(lstate, symbol, rstate);
 
-      this->transitions_->AddElement(triple);
+      this->transitions_->AddAssignment(triple);
     }
   }
 
@@ -162,7 +162,7 @@ void SymbolicFiniteAutCore::LoadFromAutDescSymbolic(
 
     SymbolicVarAsgn state(finalState);
 
-    this->finalStates_->AddElement(state);
+    this->finalStates_->AddAssignment(state);
   }
 }
 
@@ -172,9 +172,9 @@ SymbolicFiniteAutCore::AutDescription SymbolicFiniteAutCore::DumpToAutDescSymbol
   assert(this->initialStates_ != nullptr);
   assert(this->finalStates_   != nullptr);
 
-  AssignmentList transitionList = transitions_->GetAllElements();
-  AssignmentList initialStateList = initialStates_->GetAllElements();
-  AssignmentList finalStatesList = finalStates_->GetAllElements();
+  AssignmentList transitionList = transitions_->GetAllAssignments();
+  AssignmentList initialStateList = initialStates_->GetAllAssignments();
+  AssignmentList finalStatesList = finalStates_->GetAllAssignments();
 
   AutDescription desc;
 
@@ -211,7 +211,7 @@ SymbolicFiniteAutCore::AutDescription SymbolicFiniteAutCore::DumpToAutDescSymbol
     desc.transitions.insert(triple);
   }
 
-  for (auto finalState : finalStates_)
+  for (auto finalState : finalStatesList)
   { // final states
     std::string state = finalState.ToString();
 
@@ -264,7 +264,7 @@ void SymbolicFiniteAutCore::AddTransition(
   SymbolicVarAsgn symrstate(rstate);
   SymbolicVarAsgn triple = this->MergeTransition(symlstate, symsymbol, symrstate);
 
-  this->transitions_->AddElement(triple);
+  this->transitions_->AddAssignment(triple);
 }
 
 void SymbolicFiniteAutCore::AddInitialState(
@@ -285,7 +285,7 @@ void SymbolicFiniteAutCore::AddInitialState(
 
   SymbolicVarAsgn symstate(state);
 
-  this->initialStates_->AddElement(symstate);
+  this->initialStates_->AddAssignment(symstate);
 }
 
 void SymbolicFiniteAutCore::AddFinalState(
@@ -306,7 +306,7 @@ void SymbolicFiniteAutCore::AddFinalState(
 
   SymbolicVarAsgn symstate(state);
 
-  this->finalStates_->AddElement(symstate);
+  this->finalStates_->AddAssignment(symstate);
 }
 
 size_t SymbolicFiniteAutCore::SymbolicVarAsgn2Size_t(
@@ -360,8 +360,8 @@ SymbolicFiniteAutCore::SymbolicVarAsgn SymbolicFiniteAutCore::MergeTransition(
 ) const
 {
   SymbolicVarAsgn asgn(lstate);
-  asgn->append(symbol);
-  asgn->append(rstate);
+  asgn.append(symbol);
+  asgn.append(rstate);
 
   return asgn;
 }
