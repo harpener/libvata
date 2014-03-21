@@ -520,18 +520,15 @@ public:   // public methods
   SymbolicVarAsgn::AssignmentList GetAllAssignments() const
   {
     SymbolicVarAsgn::AssignmentList vec;
+    VarType var = 0;
 
-    if (IsLeaf(root_) && (GetDataFromLeaf(root_) != defaultValue_))
+    if (IsInternal(root_))
     {
-      SymbolicVarAsgn asgn("1");
-      RecTraverse(root_, asgn, vec);
+      var = GetVarFromInternal(root_);
     }
 
-    else if(IsInternal(root_))
-    {
-      SymbolicVarAsgn asgn(GetVarFromInternal(root_) + 1);
-      RecTraverse(root_, asgn, vec);
-    }
+    SymbolicVarAsgn asgn(var + 1);
+    RecTraverse(root_, asgn, vec);
 
     return vec;
   }

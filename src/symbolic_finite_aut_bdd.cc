@@ -11,6 +11,10 @@
 
 using VATA::SymbolicFiniteAutBDD;
 
+SymbolicFiniteAutBDD::SymbolicFiniteAutBDD()
+  : mtbdd_(new BDD(false))
+{}
+
 SymbolicFiniteAutBDD::SymbolicFiniteAutBDD(
   const SymbolicFiniteAutBDD & bdd
 ) : mtbdd_(new BDD(*bdd.mtbdd_))
@@ -64,29 +68,8 @@ void SymbolicFiniteAutBDD::AddAssignment(
 {
   assert(this->mtbdd_ != nullptr);
 
-  std::cout << "ASGN: " << asgn.ToString() << std::endl << std::endl;
-
-  std::vector<const BDD *> vector;
   UnionApplyFunctor unionFunc;
-
-  const BDD * bdd1 = new BDD(*this->mtbdd_);
-  vector.push_back(bdd1);
-  std::cout << "BEFORE" << std::endl << std::endl << BDD::DumpToDot(vector) << std::endl << std::endl;
-  vector.clear();
-
-  BDD * asgnBDD = new BDD(asgn, true, false);
-
-  const BDD * bdd3 = new BDD(*asgnBDD);
-  vector.push_back(bdd3);
-  std::cout << "ASGN BDD" << std::endl << std::endl << BDD::DumpToDot(vector) << std::endl << std::endl;
-  vector.clear();
-
-  *this->mtbdd_ = unionFunc(*this->mtbdd_, *asgnBDD);
-
-  const BDD * bdd2 = new BDD(*this->mtbdd_);
-  vector.push_back(bdd2);
-  std::cout << "AFTER" << std::endl << std::endl << BDD::DumpToDot(vector) << std::endl << std::endl;
-  vector.clear();
+  *this->mtbdd_ = unionFunc(*this->mtbdd_, BDD(asgn, true, false));
 }
 
 SymbolicFiniteAutBDD::AssignmentList SymbolicFiniteAutBDD::GetAllAssignments() const

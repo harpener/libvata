@@ -177,6 +177,9 @@ private: // data members
 
 public: // instantiation
 
+  /// @brief Default constructor.
+  SymbolicFiniteAutBDD();
+
   /**
    * @brief Copy constructor.
    * @param[in] bdd A BDD to copy.
@@ -198,7 +201,7 @@ public: // instantiation
    * @param[in] asgn A symbolic item to be represented by BDD.
    */
   explicit SymbolicFiniteAutBDD(
-    const SymbolicVarAsgn & asgn = SymbolicVarAsgn("")
+    const SymbolicVarAsgn & asgn
   );
 
   /// @brief Default destructor.

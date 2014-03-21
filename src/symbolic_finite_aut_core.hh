@@ -229,7 +229,7 @@ public: // public methods
     assert(transitions_   != nullptr);
     assert(initialStates_ != nullptr);
     assert(finalStates_   != nullptr);
-std::cout << "LOOP TRANSITIONS" << std::endl << std::endl;
+
     for (auto transition : TransitionsVec)
     { // transitions
       SymbolicVarAsgn triple = MergeTransition(
@@ -240,14 +240,14 @@ std::cout << "LOOP TRANSITIONS" << std::endl << std::endl;
 
       transitions_->AddAssignment(triple);
     }
-std::cout << "LOOP INITIAL STATES" << std::endl << std::endl;
+
     for (auto initialState : InitialStatesSet)
     { // initial states
       SymbolicVarAsgn state(stateVars_, initialState);
 
       initialStates_->AddAssignment(state);
     }
-std::cout << "LOOP FINAL STATES" << std::endl << std::endl;
+
     for (auto finalState : FinalStatesSet)
     { // final states
       SymbolicVarAsgn state(stateVars_, finalState);
