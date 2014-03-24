@@ -4,7 +4,7 @@
  *  Copyright (c) 2014 Jiri Chromecka <xchrom12@stud.fit.vutbr.cz>
  *
  *  Description:
- *  Header file for a symbolically represented FA.
+ *    Header file for a symbolically represented finite automaton.
  *****************************************************************************/
 
 #ifndef _VATA_SYMBOLIC_FINITE_AUT_CORE_HH_
@@ -14,7 +14,7 @@
 #include <vata/util/triple.hh>
 #include "symbolic_finite_aut_bdd.hh"
 
-/// @brief VATA library namespace.
+/// @brief  VATA library namespace
 namespace VATA
 {
   class SymbolicFiniteAutCore;
@@ -22,7 +22,7 @@ namespace VATA
 
 GCC_DIAG_OFF(effc++) // non-virtual destructors warnings suppress
 
-/// @brief Core class for a symbolically represented finite automaton.
+/// @brief  Core class for a symbolically represented finite automaton
 class VATA::SymbolicFiniteAutCore
 {
 
@@ -30,107 +30,112 @@ GCC_DIAG_ON(effc++)
 
 public: // public data types
 
-  /// @brief An automaton description structure.
+  /// @brief  Structure describing an automaton
   using AutDescription = VATA::SymbolicFiniteAut::AutDescription;
 
-  /// @brief An internal state.
-  using StateType = VATA::SymbolicFiniteAut::StateType;
+  /// @brief  Symbolic assignment
+  using SymbolicVarAsgn = VATA::SymbolicFiniteAut::SymbolicVarAsgn;
 
-  /// @brief An internal symbol.
-  using SymbolType = VATA::SymbolicFiniteAut::SymbolType;
+  /// @brief  List of symbolic assignments
+  using AssignmentList = VATA::SymbolicFiniteAut::AssignmentList;
 
-  /// @brief A state dictionary.
+  /**
+   * @brief  Bidirectional dictionary translating between string
+             and internal representation of a state
+   */
   using StateDict = VATA::SymbolicFiniteAut::StateDict;
 
-  /// @brief A symbol dictionary.
+  /**
+   * @brief  Bidirectional dictionary translating between string
+             and internal representation of a symbol
+   */
   using SymbolDict = VATA::SymbolicFiniteAut::SymbolDict;
 
-  /// @brief A weak translation of states (addition allowed).
-  using StringToStateTranslWeak = VATA::SymbolicFiniteAut::StringToStateTranslWeak;
+  /// @brief  Translator using StateDict with addition allowed
+  using StringToStateTranslWeak =
+  VATA::SymbolicFiniteAut::StringToStateTranslWeak;
 
-  /// @brief A weak translation of symbols (addition allowed).
-  using StringToSymbolTranslWeak = VATA::SymbolicFiniteAut::StringToSymbolTranslWeak;
+  /// @brief  Translator using SymbolDict with addition allowed
+  using StringToSymbolTranslWeak =
+  VATA::SymbolicFiniteAut::StringToSymbolTranslWeak;
 
-  /// @brief A strict reverse translation of states (addition forbidden).
+  /// @brief  Reverse translator using StateDict with addition forbidden
   using StateBackTranslStrict = VATA::SymbolicFiniteAut::StateBackTranslStrict;
 
-  /// @brief A strict reverse translation of symbols (addition forbidden).
-  using SymbolBackTranslStrict = VATA::SymbolicFiniteAut::SymbolBackTranslStrict;
+  /// @brief  Reverse translator using SymbolDict with addition forbidden
+  using SymbolBackTranslStrict =
+  VATA::SymbolicFiniteAut::SymbolBackTranslStrict;
 
 private: // private data types
 
-  /// @brief An internal transition.
-  using TransitionType = VATA::Util::Triple<StateType, SymbolType, StateType>;
+  /// @brief  Internal transition
+  using TransitionType = VATA::Util::Triple<size_t, size_t, size_t>;
 
-  /// @brief A vector of internal transitions.
-  using TransitionsVec = std::vector<TransitionType>;
+  /// @brief  Set of transitions
+  using TransitionsSet = std::set<TransitionType>;
 
-  /// @brief A set of internal initial states.
-  using InitialStatesSet = std::unordered_set<StateType>;
+  /// @brief  Set of initial states
+  using InitialStatesSet = std::set<size_t>;
 
-  /// @brief A set of internal final states.
-  using FinalStatesSet = std::unordered_set<StateType>;
+  /// @brief  Set of final states
+  using FinalStatesSet = std::set<size_t>;
 
-  /// @brief A symbolic BDD.
+  /// @brief  BDD
   using SymbolicFiniteAutBDD = VATA::SymbolicFiniteAutBDD;
 
-  /// @brief A symbolic representation.
-  using SymbolicVarAsgn = VATA::SymbolicFiniteAutBDD::SymbolicVarAsgn;
-
-  /// @brief A symbolic vector.
-  using AssignmentList = VATA::SymbolicFiniteAutBDD::AssignmentList;
-
-  /// @brief A symbolic BDD of transitions.
+  /// @brief  BDD of transitions
   using TransitionsBDD = SymbolicFiniteAutBDD;
 
-  /// @brief A symbolic BDD of initial states.
+  /// @brief  BDD of initial states
   using InitialStatesBDD = SymbolicFiniteAutBDD;
 
-  /// @brief A symbolic BDD of final states.
+  /// @brief  BDD of final states
   using FinalStatesBDD = SymbolicFiniteAutBDD;
 
-  /// @brief TransitionsBDD pointer for transitions.
-  using TransitionsBDDPtr = std::shared_ptr<TransitionsBDD>;
+  /// @brief  TransitionsBDD pointer
+  using TransitionsBDDPtr = std::unique_ptr<TransitionsBDD>;
 
-  /// @brief InitialStatesBDD pointer for initial states.
-  using InitialStatesBDDPtr = std::shared_ptr<InitialStatesBDD>;
+  /// @brief  InitialStatesBDD pointer
+  using InitialStatesBDDPtr = std::unique_ptr<InitialStatesBDD>;
 
-  /// @brief FinalStatesBDD pointer for final states.
-  using FinalStatesBDDPtr = std::shared_ptr<FinalStatesBDD>;
+  /// @brief  FinalStatesBDD pointer
+  using FinalStatesBDDPtr = std::unique_ptr<FinalStatesBDD>;
 
 private: // data members
 
-  /// @brief A counter of variables in symbolic state.
+  /// @brief  Number of variables in a symbolic representation of a state
   size_t stateVars_;
 
-  /// @brief A counter of variables in symbolic symbol.
+  /// @brief  Number of variables in a symbolic representation of a symbol
   size_t symbolVars_;
 
-  /// @brief A BDD of transitions.
+  /// @brief  TransitionsBDD instance
   TransitionsBDDPtr transitions_;
 
-  /// @brief A BDD of initial states.
+  /// @brief  InitialStatesBDD instance
   InitialStatesBDDPtr initialStates_;
 
-  /// @brief A BDD of final states.
+  /// @brief  FinalStatesBDD instance
   FinalStatesBDDPtr finalStates_;
 
 public: // instantiation
 
-  /// @brief Default constructor.
+  /// @brief  Default constructor
   SymbolicFiniteAutCore();
 
   /**
-   * @brief Copy constructor.
-   * @param[in] core An automaton to copy.
+   * @brief  Copy constructor
+   *
+   * @param[in]  aut  Automaton to copy
    */
   SymbolicFiniteAutCore(
     const SymbolicFiniteAutCore & core
   );
 
   /**
-   * @brief Move constructor.
-   * @param[in] core An automaton to move.
+   * @brief  Move constructor
+   *
+   * @param[in]  aut  Automaton to move
    */
   SymbolicFiniteAutCore(
     SymbolicFiniteAutCore && core
@@ -140,18 +145,22 @@ public: // instantiation
   ~SymbolicFiniteAutCore();
 
   /**
-   * @brief Copy assignment operator.
-   * @param[in] rhs An automaton to copy.
-   * @return An automaton.
+   * @brief  Copy assignment operator
+   *
+   * @param[in]  rhs  Automaton to copy
+   *
+   * @return  Symbolic automaton
    */
   SymbolicFiniteAutCore & operator=(
     const SymbolicFiniteAutCore & rhs
   );
 
   /**
-   * @brief Move assignment operator.
-   * @param[in] rhs An automaton to move.
-   * @return An automaton.
+   * @brief  Move assignment operator
+   *
+   * @param[in]  rhs  Automaton to move
+   *
+   * @return  Symbolic automaton
    */
   SymbolicFiniteAutCore & operator=(
     SymbolicFiniteAutCore && rhs
@@ -160,12 +169,13 @@ public: // instantiation
 public: // public methods
 
   /**
-   * @brief Explicit loading an automaton from aut_description.
-   * @tparam StateTranslFunc A functor for translation of states.
-   * @tparam SymbolTranslFunc A functor translation of symbols.
-   * @param[in] desc A structure describing and automaton.
-   * @param[in] stateTransl A functor for translation of states.
-   * @param[in] symbolTransl A functor translation of symbols.
+   * @brief  Explicitly loads an automaton from an AutDescription structure
+   *
+   * @param[in]  desc          Structure describing an automaton
+   * @param[in]  stateTransl   Translator between string and internal
+                               representation of a state
+   * @param[in]  symbolTransl  Translator between string and internal
+                               representation of a symbol
    */
   template <typename StateTranslFunc, typename SymbolTranslFunc>
   void LoadFromAutDescExplicit(
@@ -175,22 +185,22 @@ public: // public methods
   )
   {
     // store to internal representation before converting to symbolic
-    TransitionsVec TransitionsVec;
-    InitialStatesSet InitialStatesSet;
-    FinalStatesSet FinalStatesSet;
+    TransitionsSet transitionsSet;
+    InitialStatesSet initialStatesSet;
+    FinalStatesSet finalStatesSet;
 
     // count different states and symbols
-    std::unordered_set<StateType> states;
-    std::unordered_set<SymbolType> symbols;
+    std::set<size_t> states;
+    std::set<size_t> symbols;
 
     for (auto transition : desc.transitions)
     { // transitions and initial states
       if (transition.first.empty())
       { // an init state is represented as a transition with no left-side state
-        StateType state = stateTransl(transition.third);
+        size_t state = stateTransl(transition.third);
 
         states.insert(state);
-        InitialStatesSet.insert(state);
+        initialStatesSet.insert(state);
       }
 
       else if (transition.first.size() > 1)
@@ -200,24 +210,23 @@ public: // public methods
 
       else
       { // common transition
-        StateType lstate = stateTransl(transition.first.front());
-        SymbolType symbol = symbolTransl(transition.second);
-        StateType rstate = stateTransl(transition.third);
-        TransitionType triple(lstate, symbol, rstate);
+        size_t lstate = stateTransl(transition.first.front());
+        size_t symbol = symbolTransl(transition.second);
+        size_t rstate = stateTransl(transition.third);
 
         states.insert(lstate);
         symbols.insert(symbol);
         states.insert(rstate);
-        TransitionsVec.push_back(triple);
+        transitionsSet.insert(TransitionType(lstate, symbol, rstate));
       }
     }
 
     for (auto finalState : desc.finalStates)
     { // final states
-      StateType state = stateTransl(finalState);
+      size_t state = stateTransl(finalState);
 
       states.insert(state);
-      FinalStatesSet.insert(state);
+      finalStatesSet.insert(state);
     }
 
     // determine number of variables to represent a symbolic state or symbol
@@ -230,217 +239,155 @@ public: // public methods
     assert(initialStates_ != nullptr);
     assert(finalStates_   != nullptr);
 
-    for (auto transition : TransitionsVec)
+    for (auto transition : transitionsSet)
     { // transitions
-      SymbolicVarAsgn triple = MergeTransition(
-        transition.first,
-        transition.second,
-        transition.third
+      transitions_->AddAssignment(
+        SymbolicFiniteAutBDD::MergeTransition(
+          stateVars_,
+          symbolVars_,
+          transition.first,
+          transition.second,
+          transition.third
+        )
       );
-
-      transitions_->AddAssignment(triple);
     }
 
-    for (auto initialState : InitialStatesSet)
+    for (auto initialState : initialStatesSet)
     { // initial states
-      SymbolicVarAsgn state(stateVars_, initialState);
-
-      initialStates_->AddAssignment(state);
+      initialStates_->AddAssignment(SymbolicVarAsgn(stateVars_, initialState));
     }
 
-    for (auto finalState : FinalStatesSet)
+    for (auto finalState : finalStatesSet)
     { // final states
-      SymbolicVarAsgn state(stateVars_, finalState);
-
-      finalStates_->AddAssignment(state);
+      finalStates_->AddAssignment(SymbolicVarAsgn(stateVars_, finalState));
     }
   }
 
   /**
-   * @brief Symbolic loading an automaton from aut_description.
-   * @param[in] desc A structure describing and automaton.
+   * @brief  Symbolically loads an automaton from an AutDescription structure
+   *
+   * @param[in]  desc  Structure describing an automaton
    */
   void LoadFromAutDescSymbolic(
     const AutDescription & desc
   );
 
   /**
-   * @brief Explicit dumping an automaton to aut_description.
-   * @tparam StateBackTranslFunc A functor for reverse translation of states.
-   * @tparam SymbolBackTranslFunc A functor for reverse translation of symbols.
-   * @param[in] stateBackTransl A functor for reverse translation of states.
-   * @param[in] symbolBackTransl A functor for reverse translation of symbols.
-   * @return An aut_description structure describing an automaton.
+   * @brief  Explicitly dumps an automaton to an AutDescription
+   *
+   * @param[in]  stateBackTransl   Reverse translator between string
+                                   and internal representation of a state
+   * @param[in]  symbolBackTransl  Reverse translator between string
+                                   and internal representation of a symbol
+   *
+   * @return  Structure describing an automaton
    */
   template <typename StateBackTranslFunc, typename SymbolBackTranslFunc>
   AutDescription DumpToAutDescExplicit(
-    StateBackTranslFunc                    stateBackTransl,
-    SymbolBackTranslFunc                   symbolBackTransl
+    StateBackTranslFunc    stateBackTransl,
+    SymbolBackTranslFunc   symbolBackTransl
   ) const
   {
     assert(transitions_   != nullptr);
     assert(initialStates_ != nullptr);
     assert(finalStates_   != nullptr);
 
-    AssignmentList transitionList = transitions_->GetAllAssignments();
+    AssignmentList transitionList   = transitions_->GetAllAssignments();
     AssignmentList initialStateList = initialStates_->GetAllAssignments();
-    AssignmentList finalStatesList = finalStates_->GetAllAssignments();
+    AssignmentList finalStatesList  = finalStates_->GetAllAssignments();
 
     AutDescription desc;
 
     for (auto transition : transitionList)
     { // transitions
-      StateType lstate;
-      SymbolType symbol;
-      StateType rstate;
+      size_t lstate;
+      size_t symbol;
+      size_t rstate;
 
-      SplitTransition(transition, lstate, symbol, rstate);
+      SymbolicFiniteAutBDD::SplitTransition(
+        transition,
+        stateVars_,
+        symbolVars_,
+        lstate,
+        symbol,
+        rstate
+      );
 
-      std::string strlstate = stateBackTransl(lstate);
-      std::string strsymbol = symbolBackTransl(symbol);
-      std::string strrstate = stateBackTransl(rstate);
-      std::vector<std::string> tuple{strlstate};
-      VATA::Util::Triple<
-        std::vector<std::string>,
-        std::string,
-        std::string
-      > triple(tuple, strsymbol, strrstate);
-
-      desc.transitions.insert(triple);
+      desc.transitions.insert(
+        VATA::Util::Triple<
+          std::vector<std::string>,
+          std::string,
+          std::string
+        >(
+          std::vector<std::string>{stateBackTransl(lstate)},
+          symbolBackTransl(symbol),
+          stateBackTransl(rstate)
+        )
+      );
     }
 
     for (auto initialState : initialStateList)
     { // initial states
-      StateType state = SymbolicVarAsgn2Size_t(initialState);
-      std::string strstate = stateBackTransl(state);
-      std::vector<std::string> tuple;
-      VATA::Util::Triple<
-        std::vector<std::string>,
-        std::string,
-        std::string
-      > triple(tuple, "x", strstate);
-
-      desc.transitions.insert(triple);
+      desc.transitions.insert(
+        VATA::Util::Triple<
+          std::vector<std::string>,
+          std::string,
+          std::string
+        >(
+          std::vector<std::string>(),
+          "x",
+          stateBackTransl(SymbolicFiniteAutBDD::FromSymbolic(initialState))
+        )
+      );
     }
 
     for (auto finalState : finalStatesList)
     { // final states
-      StateType state = SymbolicVarAsgn2Size_t(finalState);
-      std::string strstate = stateBackTransl(state);
-
-      desc.finalStates.insert(strstate);
+      desc.finalStates.insert(
+        stateBackTransl(SymbolicFiniteAutBDD::FromSymbolic(finalState))
+      );
     }
 
     return desc;
   }
 
   /**
-   * @brief Symbolic dumping an automaton to aut_description.
-   * @return An aut_description structure describing an automaton.
+   * @brief  Symbolically dumps an automaton to an AutDescription
+   *
+   * @return  Structure describing an automaton
    */
   AutDescription DumpToAutDescSymbolic() const;
 
   /**
-   * @brief Adding a symbolic transition.
-   * @param[in] lstate A string representation of a left-side state.
-   * @param[in] symbol A string representation of a symbol.
-   * @param[in] rstate A string representation of a right-side state.
+   * @brief  Adding a symbolic transition
+   *
+   * @param[in]  lstate  Symbolic representation of a left-side state
+   * @param[in]  symbol  Symbolic representation of a symbol
+   * @param[in]  rstate  Symbolic representation of a right-side state
    */
   void AddTransition(
-    const std::string & lstate,
-    const std::string & symbol,
-    const std::string & rstate
-  );
-
-  /**
-   * @brief Adding a symbolic initial state.
-   * @param[in] state A string representation of a initial state.
-   */
-  void AddInitialState(
-    const std::string & state
-  );
-
-  /**
-   * @brief Adding a symbolic final state.
-   * @param[in] state A string representation of a final state.
-   */
-  void AddFinalState(
-    const std::string & state
-  );
-
-private: // private methods
-
-  /**
-   * @brief Conversion from SymbolicVarAsgn to size_t.
-   * @param[in] asgn A symbolic representation of a state or symbol.
-   * @return An internal representation of a state or symbol.
-   */
-  static size_t SymbolicVarAsgn2Size_t(
-    const SymbolicVarAsgn & asgn
-  );
-
-  /**
-   * @brief Conversion from string to size_t.
-   * @param[in] str A symbolic (string) representation of a state or symbol.
-   * @return An internal representation of a state or symbol.
-   */
-  static size_t SymbolicVarAsgn2Size_t(
-    const std::string & str
-  );
-
-  /**
-   * @brief Transition merge.
-   * @param[in] lstate An internal representation of a left-side state.
-   * @param[in] symbol An internal representation of a symbol.
-   * @param[in] rstate An internal representation of a right-side state.
-   * @return A merged transition.
-   */
-  SymbolicVarAsgn MergeTransition(
-    const StateType & lstate,
-    const SymbolType & symbol,
-    const StateType & rstate
-  ) const;
-
-  /**
-   * @brief Transition merge.
-   * @param[in] lstate A symbolic representation of a left-side state.
-   * @param[in] symbol A symbolic representation of a symbol.
-   * @param[in] rstate A symbolic representation of a right-side state.
-   * @return A merged transition.
-   */
-  SymbolicVarAsgn MergeTransition(
     const SymbolicVarAsgn & lstate,
     const SymbolicVarAsgn & symbol,
     const SymbolicVarAsgn & rstate
-  ) const;
+  );
 
   /**
-   * @brief Transition split.
-   * @param[in] transition A symbolic representation of a transition.
-   * @param[out] lstate An output internal representation of a left-side state.
-   * @param[out] symbol An output internal representation of a symbol.
-   * @param[out] rstate An output internal representation of a right-side state.
+   * @brief  Adding a symbolic initial state
+   *
+   * @param[in]  state  Symbolic representation of a initial state
    */
-  void SplitTransition(
-    const SymbolicVarAsgn & transition,
-    StateType & lstate,
-    SymbolType & symbol,
-    StateType & rstate
-  ) const;
+  void AddInitialState(
+    const SymbolicVarAsgn & state
+  );
 
   /**
-   * @brief Transition split.
-   * @param[in] transition A symbolic representation of a transition.
-   * @param[out] lstate An output string representation of a left-side state.
-   * @param[out] symbol An output string representation of a symbol.
-   * @param[out] rstate An output string representation of a right-side state.
+   * @brief  Adding a symbolic final state
+   *
+   * @param[in]  state  Symbolic representation of a final state
    */
-  void SplitTransition(
-    const SymbolicVarAsgn & transition,
-    std::string & lstate,
-    std::string & symbol,
-    std::string & rstate
-  ) const;
+  void AddFinalState(
+    const SymbolicVarAsgn & state
+  );
 };
 
 #endif // _VATA_SYMBOLIC_FINITE_AUT_CORE_HH_

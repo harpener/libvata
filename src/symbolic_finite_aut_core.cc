@@ -4,7 +4,7 @@
  *  Copyright (c) 2014 Jiri Chromecka <xchrom12@stud.fit.vutbr.cz>
  *
  *  Description:
- *  Source file for a symbolically represented FA.
+ *    Source file for a symbolically represented finite automaton.
  *****************************************************************************/
 
 #include "symbolic_finite_aut_core.hh"
@@ -97,9 +97,7 @@ void SymbolicFiniteAutCore::LoadFromAutDescSymbolic(
         throw std::runtime_error("Number of variables in states differs.");
       }
 
-      SymbolicVarAsgn state(transition.third);
-
-      this->initialStates_->AddAssignment(state);
+      this->initialStates_->AddAssignment(SymbolicVarAsgn(transition.third));
     }
 
     else if (transition.first.size() > 1)
@@ -139,12 +137,13 @@ void SymbolicFiniteAutCore::LoadFromAutDescSymbolic(
         throw std::runtime_error("Number of variables in states differs.");
       }
 
-      SymbolicVarAsgn lstate(transition.first.front());
-      SymbolicVarAsgn symbol(transition.second);
-      SymbolicVarAsgn rstate(transition.third);
-      SymbolicVarAsgn triple = this->MergeTransition(lstate, symbol, rstate);
-
-      this->transitions_->AddAssignment(triple);
+      this->transitions_->AddAssignment(
+        SymbolicFiniteAutBDD::MergeTransition(
+          transition.first.front(),
+          transition.second,
+          transition.third
+        )
+      );
     }
   }
 
@@ -160,13 +159,14 @@ void SymbolicFiniteAutCore::LoadFromAutDescSymbolic(
       throw std::runtime_error("Number of variables in states differs.");
     }
 
-    SymbolicVarAsgn state(finalState);
-
-    this->finalStates_->AddAssignment(state);
+    this->finalStates_->AddAssignment(
+      SymbolicVarAsgn(finalState)
+    );
   }
 }
 
-SymbolicFiniteAutCore::AutDescription SymbolicFiniteAutCore::DumpToAutDescSymbolic() const
+SymbolicFiniteAutCore::AutDescription SymbolicFiniteAutCore::
+DumpToAutDescSymbolic() const
 {
   assert(this->transitions_   != nullptr);
   assert(this->initialStates_ != nullptr);
@@ -184,220 +184,132 @@ SymbolicFiniteAutCore::AutDescription SymbolicFiniteAutCore::DumpToAutDescSymbol
     std::string symbol;
     std::string rstate;
 
-    this->SplitTransition(transition, lstate, symbol, rstate);
+    SymbolicFiniteAutBDD::SplitTransition(
+      transition,
+      this->stateVars_,
+      this->symbolVars_,
+      lstate,
+      symbol,
+      rstate
+    );
 
-    std::vector<std::string> tuple{lstate};
-    VATA::Util::Triple<
-      std::vector<std::string>,
-      std::string,
-      std::string
-    > triple(tuple, symbol, rstate);
-
-    desc.transitions.insert(triple);
+    desc.transitions.insert(
+      VATA::Util::Triple<
+        std::vector<std::string>,
+        std::string,
+        std::string
+      >(
+        std::vector<std::string>{lstate},
+        symbol,
+        rstate
+      )
+    );
   }
 
   for (auto initialState : initialStateList)
   { // initial states
-    std::string state = initialState.ToString();
-
-    std::vector<std::string> tuple;
-    std::string str(this->symbolVars_, '0');
-    VATA::Util::Triple<
-      std::vector<std::string>,
-      std::string,
-      std::string
-    > triple(tuple, str, state);
-
-    desc.transitions.insert(triple);
+    desc.transitions.insert(
+      VATA::Util::Triple<
+        std::vector<std::string>,
+        std::string,
+        std::string
+      >(
+        std::vector<std::string>(),
+        std::string(this->symbolVars_, '0'),
+        initialState.ToString()
+      )
+    );
   }
 
   for (auto finalState : finalStatesList)
   { // final states
-    std::string state = finalState.ToString();
-
-    desc.finalStates.insert(state);
+    desc.finalStates.insert(finalState.ToString());
   }
 
   return desc;
 }
 
 void SymbolicFiniteAutCore::AddTransition(
-  const std::string & lstate,
-  const std::string & symbol,
-  const std::string & rstate
+  const SymbolicVarAsgn & lstate,
+  const SymbolicVarAsgn & symbol,
+  const SymbolicVarAsgn & rstate
 )
 {
   assert(this->transitions_ != nullptr);
 
   if (this->stateVars_ == 0)
   { // state is new
-    this->stateVars_ = lstate.size();
+    this->stateVars_ = lstate.length();
   }
 
-  else if (this->stateVars_ != lstate.size())
+  else if (this->stateVars_ != lstate.length())
   { // check number of variables in state
     throw std::runtime_error("Number of variables in states differs.");
   }
 
   if (this->symbolVars_ == 0)
   { // symbol is new
-    this->symbolVars_ = symbol.size();
+    this->symbolVars_ = symbol.length();
   }
 
-  else if (this->symbolVars_ != symbol.size())
+  else if (this->symbolVars_ != symbol.length())
   { // check number of variables in symbol
     throw std::runtime_error("Number of variables in symbols differs.");
   }
 
   if (this->stateVars_ == 0)
   { // state is new
-    this->stateVars_ = rstate.size();
+    this->stateVars_ = rstate.length();
   }
 
-  else if (this->stateVars_ != rstate.size())
+  else if (this->stateVars_ != rstate.length())
   { // check number of variables in state
     throw std::runtime_error("Number of variables in states differs.");
   }
 
-  SymbolicVarAsgn symlstate(lstate);
-  SymbolicVarAsgn symsymbol(symbol);
-  SymbolicVarAsgn symrstate(rstate);
-  SymbolicVarAsgn triple = this->MergeTransition(symlstate, symsymbol, symrstate);
-
-  this->transitions_->AddAssignment(triple);
+  this->transitions_->AddAssignment(
+    SymbolicFiniteAutBDD::MergeTransition(
+      lstate,
+      symbol,
+      rstate
+    )
+  );
 }
 
 void SymbolicFiniteAutCore::AddInitialState(
-  const std::string & state
+  const SymbolicVarAsgn & state
 )
 {
   assert(this->initialStates_ != nullptr);
 
   if (this->stateVars_ == 0)
   { // state is new
-    this->stateVars_ = state.size();
+    this->stateVars_ = state.length();
   }
 
-  else if (this->stateVars_ != state.size())
+  else if (this->stateVars_ != state.length())
   { // check number of variables in state
     throw std::runtime_error("Number of variables in states differs.");
   }
 
-  SymbolicVarAsgn symstate(state);
-
-  this->initialStates_->AddAssignment(symstate);
+  this->initialStates_->AddAssignment(state);
 }
 
 void SymbolicFiniteAutCore::AddFinalState(
-  const std::string & state
+  const SymbolicVarAsgn & state
 )
 {
   assert(this->finalStates_ != nullptr);
 
   if (this->stateVars_ == 0)
   { // state is new
-    this->stateVars_ = state.size();
+    this->stateVars_ = state.length();
   }
 
-  else if (this->stateVars_ != state.size())
+  else if (this->stateVars_ != state.length())
   { // check number of variables in state
     throw std::runtime_error("Number of variables in states differs.");
   }
 
-  SymbolicVarAsgn symstate(state);
-
-  this->finalStates_->AddAssignment(symstate);
-}
-
-size_t SymbolicFiniteAutCore::SymbolicVarAsgn2Size_t(
-  const SymbolicVarAsgn & asgn
-)
-{
-  std::string str = asgn.ToString();
-
-  return SymbolicVarAsgn2Size_t(str);
-}
-
-size_t SymbolicFiniteAutCore::SymbolicVarAsgn2Size_t(
-  const std::string & str
-)
-{
-  size_t result = 0;
-  int i = 0;
-
-  for(std::string::const_iterator it = str.begin(); it != str.end(); it++)
-  { // iterate through string
-    switch(*it)
-    {
-      case '0': break;
-      case '1': result += pow(2, i);
-      default: assert(false); break;
-    }
-
-    ++i;
-  }
-
-  return result;
-}
-
-SymbolicFiniteAutCore::SymbolicVarAsgn SymbolicFiniteAutCore::MergeTransition(
-  const StateType & lstate,
-  const SymbolType & symbol,
-  const StateType & rstate
-) const
-{
-  SymbolicVarAsgn symLeftState(this->stateVars_, lstate);
-  SymbolicVarAsgn symSymbol(this->symbolVars_, symbol);
-  SymbolicVarAsgn symRightState(this->stateVars_, rstate);
-
-  return this->MergeTransition(symLeftState, symSymbol, symRightState);
-}
-
-SymbolicFiniteAutCore::SymbolicVarAsgn SymbolicFiniteAutCore::MergeTransition(
-  const SymbolicVarAsgn & lstate,
-  const SymbolicVarAsgn & symbol,
-  const SymbolicVarAsgn & rstate
-) const
-{
-  SymbolicVarAsgn asgn(lstate);
-  asgn.append(symbol);
-  asgn.append(rstate);
-
-  return asgn;
-}
-
-void SymbolicFiniteAutCore::SplitTransition(
-  const SymbolicVarAsgn & transition,
-  StateType & lstate,
-  SymbolType & symbol,
-  StateType & rstate
-) const
-{
-  std::string strlstate;
-  std::string strsymbol;
-  std::string strrstate;
-
-  this->SplitTransition(transition, strlstate, strsymbol, strrstate);
-
-  lstate = this->SymbolicVarAsgn2Size_t(strlstate);
-  symbol = this->SymbolicVarAsgn2Size_t(strsymbol);
-  rstate = this->SymbolicVarAsgn2Size_t(strrstate);
-}
-
-void SymbolicFiniteAutCore::SplitTransition(
-  const SymbolicVarAsgn & transition,
-  std::string & lstate,
-  std::string & symbol,
-  std::string & rstate
-) const
-{
-  size_t lstateOffset = 0;
-  size_t symbolOffset = lstateOffset + this->stateVars_;
-  size_t rstateOffset = symbolOffset + this->symbolVars_;
-
-  std::string str = transition.ToString();
-
-  lstate = str.substr(lstateOffset, this->stateVars_);
-  symbol = str.substr(symbolOffset, this->symbolVars_);
-  rstate = str.substr(rstateOffset, this->stateVars_);
+  this->finalStates_->AddAssignment(state);
 }

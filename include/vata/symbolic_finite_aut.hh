@@ -4,7 +4,7 @@
  *  Copyright (c) 2014 Jiri Chromecka <xchrom12@stud.fit.vutbr.cz>
  *
  *  Description:
- *  Header file for a symbolically represented FA (facade).
+ *    Header file for a symbolically represented finite automaton (facade).
  *****************************************************************************/
 
 #ifndef _VATA_SYMBOLIC_FINITE_AUT_HH_
@@ -14,11 +14,12 @@
 #include <vata/parsing/abstr_parser.hh>
 #include <vata/serialization/abstr_serializer.hh>
 #include <vata/util/aut_description.hh>
+#include <vata/sym_var_asgn.hh>
 #include <vata/util/two_way_dict.hh>
 #include <vata/util/transl_weak.hh>
 #include <vata/util/transl_strict.hh>
 
-/// @brief VATA library namespace.
+/// @brief  VATA library namespace
 namespace VATA
 {
   class SymbolicFiniteAut;
@@ -28,7 +29,7 @@ namespace VATA
 
 GCC_DIAG_OFF(effc++) // non-virtual destructors warnings suppress
 
-/// @brief Facade class for a symbolically represented finite automaton.
+/// @brief  Facade class for a symbolically represented finite automaton
 class VATA::SymbolicFiniteAut
 {
 
@@ -36,83 +37,99 @@ GCC_DIAG_ON(effc++)
 
 public: // data types
 
-  /// @brief An automaton description structure.
+  /// @brief  Structure describing an automaton
   using AutDescription = VATA::Util::AutDescription;
 
-  /// @brief An internal state.
-  using StateType = size_t;
+  /// @brief  Symbolic assignment
+  using SymbolicVarAsgn = VATA::SymbolicVarAsgn;
 
-  /// @brief An internal symbol.
-  using SymbolType = size_t;
+  /// @brief  List of symbolic assignments
+  using AssignmentList = VATA::SymbolicVarAsgn::AssignmentList;
 
-  /// @brief A state dictionary.
-  using StateDict = VATA::Util::TwoWayDict<std::string, StateType>;
+  /**
+   * @brief  Bidirectional dictionary translating between string
+             and internal representation of a state
+   */
+  using StateDict = VATA::Util::TwoWayDict<std::string, size_t>;
 
-  /// @brief A symbol dictionary.
-  using SymbolDict = VATA::Util::TwoWayDict<std::string, SymbolType>;
+  /**
+   * @brief  Bidirectional dictionary translating between string
+             and internal representation of a symbol
+   */
+  using SymbolDict = VATA::Util::TwoWayDict<std::string, size_t>;
 
-  /// @brief A weak translation of states (addition allowed).
+  /// @brief  Translator using StateDict with addition allowed
   using StringToStateTranslWeak = VATA::Util::TranslatorWeak<StateDict>;
 
-  /// @brief A weak translation of symbols (addition allowed).
+  /// @brief  Translator using SymbolDict with addition allowed
   using StringToSymbolTranslWeak = VATA::Util::TranslatorWeak<SymbolDict>;
 
-  /// @brief A strict reverse translation of states (addition forbidden).
-  using StateBackTranslStrict = VATA::Util::TranslatorStrict<StateDict::MapBwdType>;
+  /// @brief  Reverse translator using StateDict with addition forbidden
+  using StateBackTranslStrict = VATA::Util::TranslatorStrict<
+                                  StateDict::MapBwdType
+                                >;
 
-  /// @brief A strict reverse translation of symbols (addition forbidden).
-  using SymbolBackTranslStrict = VATA::Util::TranslatorStrict<SymbolDict::MapBwdType>;
+  /// @brief  Reverse translator using SymbolDict with addition forbidden
+  using SymbolBackTranslStrict = VATA::Util::TranslatorStrict<
+                                   SymbolDict::MapBwdType
+                                 >;
 
 private: // data types
 
-  /// @brief A loadable automaton core.
-  using SymAutCore = VATA::SymbolicLoadableAut<VATA::SymbolicFiniteAutCore>;
+  /// @brief  Loadable symbolically represented finite automaton core
+  using Core = VATA::SymbolicLoadableAut<VATA::SymbolicFiniteAutCore>;
 
-  /// @brief SymAutCore pointer.
-  using SymAutCorePtr = std::unique_ptr<SymAutCore>;
+  /// @brief  Core pointer
+  using CorePtr = std::unique_ptr<Core>;
 
 private: // data members
 
-  /// @brief A loadable automaton core.
-  SymAutCorePtr core_;
+  /// @brief  Core instance
+  CorePtr core_;
 
 public: // instantiation
 
-  /// @brief Default constructor.
+  /// @brief  Default constructor
   SymbolicFiniteAut();
 
   /**
-   * @brief Copy constructor.
-   * @param[in] aut An automaton to copy.
+   * @brief  Copy constructor
+   *
+   * @param[in]  aut  Automaton to copy
    */
   SymbolicFiniteAut(
     const SymbolicFiniteAut & aut
   );
 
   /**
-   * @brief Move constructor.
-   * @param[in] aut An automaton to move.
+   * @brief  Move constructor
+   *
+   * @param[in]  aut  Automaton to move
    */
   SymbolicFiniteAut(
     SymbolicFiniteAut && aut
   );
 
-  /// @brief Default destructor.
+  /// @brief  Default destructor
   ~SymbolicFiniteAut();
 
   /**
-   * @brief Copy assignment operator.
-   * @param[in] rhs An automaton to copy.
-   * @return An automaton.
+   * @brief  Copy assignment operator
+   *
+   * @param[in]  rhs  Automaton to copy
+   *
+   * @return  Symbolic automaton
    */
   SymbolicFiniteAut & operator=(
     const SymbolicFiniteAut & rhs
   );
 
   /**
-   * @brief Move assignment operator.
-   * @param[in] rhs An automaton to move.
-   * @return An automaton.
+   * @brief  Move assignment operator
+   *
+   * @param[in]  rhs  Automaton to move
+   *
+   * @return  Symbolic automaton
    */
   SymbolicFiniteAut & operator=(
     SymbolicFiniteAut && rhs
@@ -121,10 +138,11 @@ public: // instantiation
 public: // public methods
 
   /**
-   * @brief Loading an automaton from a string.
-   * @param[in] parser A procedure for parsing a string.
-   * @param[in] str A string describing an automaton.
-   * @param[in] params A method of loading.
+   * @brief  Loads an automaton from a string
+   *
+   * @param[in]  parser  Tool parsing a string describing an automaton
+   * @param[in]  str     String describing an automaton
+   * @param[in]  params  Explicit or symbolic method of loading
    */
   void LoadFromString(
     VATA::Parsing::AbstrParser & parser,
@@ -133,12 +151,15 @@ public: // public methods
   );
 
   /**
-   * @brief Loading an automaton from a string.
-   * @param[in] parser A procedure for parsing a string.
-   * @param[in] str A string describing an automaton.
-   * @param[in] stateDict A dictionary for translation of states.
-   * @param[in] symbolDict A dictionary for translation of symbol.
-   * @param[in] params A method of loading.
+   * @brief  Loads an automaton from a string
+   *
+   * @param[in]  parser      Tool parsing a string describing an automaton
+   * @param[in]  str         String describing an automaton
+   * @param[in]  stateDict   Bidirectional dictionary translating between
+                             string and internal representation of a state
+   * @param[in]  symbolDict  Bidirectional dictionary translating between
+                             string and internal representation of a symbol
+   * @param[in]  params      Explicit or symbolic method of loading
    */
   void LoadFromString(
     VATA::Parsing::AbstrParser & parser,
@@ -149,12 +170,15 @@ public: // public methods
   );
 
   /**
-   * @brief Loading an automaton from a string.
-   * @param[in] parser A procedure for parsing a string.
-   * @param[in] str A string describing an automaton.
-   * @param[in] stateTransl A functor for translation of states.
-   * @param[in] symbolTransl A functor for translation of symbol.
-   * @param[in] params A method of loading.
+   * @brief  Loads an automaton from a string
+   *
+   * @param[in]  parser        Tool parsing a string describing an automaton
+   * @param[in]  str           String describing an automaton
+   * @param[in]  stateTransl   Translator between string and internal
+                               representation of a state
+   * @param[in]  symbolTransl  Translator between string and internal
+                               representation of a symbol
+   * @param[in]  params        Explicit or symbolic method of loading
    */
   void LoadFromString(
     VATA::Parsing::AbstrParser & parser,
@@ -165,9 +189,10 @@ public: // public methods
   );
 
   /**
-   * @brief Loading an automaton from aut_description.
-   * @param[in] desc A structure describing and automaton.
-   * @param[in] params A method of loading.
+   * @brief  Loads an automaton from an AutDescription structure
+   *
+   * @param[in]  desc    Structure describing an automaton
+   * @param[in]  params  Explicit or symbolic method of loading
    */
   void LoadFromAutDesc(
     const AutDescription & desc,
@@ -175,11 +200,14 @@ public: // public methods
   );
 
   /**
-   * @brief Loading an automaton from aut_description.
-   * @param[in] desc A structure describing and automaton.
-   * @param[in] stateDict A dictionary for translation of states.
-   * @param[in] symbolDict A dictionary for translation of symbol.
-   * @param[in] params A method of loading.
+   * @brief  Loads an automaton from an AutDescription structure
+   *
+   * @param[in]  desc        Structure describing an automaton
+   * @param[in]  stateDict   Bidirectional dictionary translating between
+                             string and internal representation of a state
+   * @param[in]  symbolDict  Bidirectional dictionary translating between
+                             string and internal representation of a symbol
+   * @param[in]  params      Explicit or symbolic method of loading
    */
   void LoadFromAutDesc(
     const AutDescription & desc,
@@ -189,11 +217,14 @@ public: // public methods
   );
 
   /**
-   * @brief Loading an automaton from aut_description.
-   * @param[in] desc A structure describing and automaton.
-   * @param[in] stateTransl A functor for translation of states.
-   * @param[in] symbolTransl A functor for translation of symbol.
-   * @param[in] params A method of loading.
+   * @brief  Loads an automaton from an AutDescription structure
+   *
+   * @param[in]  desc          Structure describing an automaton
+   * @param[in]  stateTransl   Translator between string and internal
+                               representation of a state
+   * @param[in]  symbolTransl  Translator between string and internal
+                               representation of a symbol
+   * @param[in]  params        Explicit or symbolic method of loading
    */
   void LoadFromAutDesc(
     const AutDescription &     desc,
@@ -203,19 +234,23 @@ public: // public methods
   );
 
   /**
-   * @brief Dumping an automaton to a string.
-   * @param[in] params A method of dumping.
-   * @return A string describing an automaton.
+   * @brief  Dumps an automaton to a string
+   *
+   * @param[in]  params  Explicit or symbolic method of dumping
+   *
+   * @return  String describing an automaton
    */
   std::string DumpToString(
     const std::string & params
   ) const;
 
   /**
-   * @brief Dumping an automaton to a string.
-   * @param[in] serializer A procedure for serializing an aut_description.
-   * @param[in] params A method of dumping.
-   * @return A string describing an automaton.
+   * @brief  Dumps an automaton to a string
+   *
+   * @param[in]  serializer  A tool serializing an AutDescription structure
+   * @param[in]  params      Explicit or symbolic method of dumping
+   *
+   * @return  String describing an automaton
    */
   std::string DumpToString(
     VATA::Serialization::AbstrSerializer & serializer,
@@ -223,12 +258,17 @@ public: // public methods
   ) const;
 
   /**
-   * @brief Dumping an automaton to a string.
-   * @param[in] serializer A procedure for serializing an aut_description.
-   * @param[in] stateDict A dictionary for state reverse translation.
-   * @param[in] symbolDict A dictionary for symbol reverse translation.
-   * @param[in] params A method of dumping.
-   * @return A string describing an automaton.
+   * @brief  Dumps an automaton to a string
+   *
+   * @param[in]  serializer  Tool serializing a structure describing
+                             an automaton
+   * @param[in]  stateDict   Bidirectional dictionary translating between
+                             string and internal representation of a state
+   * @param[in]  symbolDict  Bidirectional dictionary translating between
+                             string and internal representation of a symbol
+   * @param[in]  params      Explicit or symbolic method of dumping
+   *
+   * @return  String describing an automaton
    */
   std::string DumpToString(
     VATA::Serialization::AbstrSerializer & serializer,
@@ -238,12 +278,17 @@ public: // public methods
   ) const;
 
   /**
-   * @brief Dumping an automaton to a string.
-   * @param[in] serializer A procedure for serializing an aut_description.
-   * @param[in] stateBackTransl A functor for reverse translation of states.
-   * @param[in] symbolBackTransl A functor for reverse translation of symbols.
-   * @param[in] params A method of dumping.
-   * @return A string describing an automaton.
+   * @brief  Dumps an automaton to a string
+   *
+   * @param[in]  serializer        Tool serializing a structure describing
+                                   an automaton
+   * @param[in]  stateBackTransl   Reverse translator between string
+                                   and internal representation of a state
+   * @param[in]  symbolBackTransl  Reverse translator translating between string
+                                   and internal representation of a symbol
+   * @param[in]  params            Explicit or symbolic method of dumping
+   *
+   * @return  String describing an automaton
    */
   std::string DumpToString(
     VATA::Serialization::AbstrSerializer & serializer,
@@ -253,20 +298,26 @@ public: // public methods
   ) const;
 
   /**
-   * @brief Dumping an automaton to aut_description.
-   * @param[in] params A method of dumping.
-   * @return An aut_description structure describing an automaton.
+   * @brief  Dumps an automaton to an AutDescription structure
+   *
+   * @param[in]  params  Explicit or symbolic method of dumping
+   *
+   * @return  Structure describing an automaton
    */
   AutDescription DumpToAutDesc(
     const std::string & params
   ) const;
 
   /**
-   * @brief Dumping an automaton to aut_description.
-   * @param[in] stateDict A dictionary for state reverse translation.
-   * @param[in] symbolDict A dictionary for symbol reverse translation.
-   * @param[in] params A method of dumping.
-   * @return An aut_description structure describing an automaton.
+   * @brief  Dumps an automaton to an AutDescription structure
+   *
+   * @param[in]  stateDict   Bidirectional dictionary translating between
+                             string and internal representation of a state
+   * @param[in]  symbolDict  Bidirectional dictionary translating between
+                             string and internal representation of a symbol
+   * @param[in]  params      Explicit or symbolic method of dumping
+   *
+   * @return  Structure describing an automaton
    */
   AutDescription DumpToAutDesc(
     const StateDict &   stateDict,
@@ -275,11 +326,15 @@ public: // public methods
   ) const;
 
   /**
-   * @brief Dumping an automaton to aut_description.
-   * @param[in] stateBackTransl A functor for reverse translation of states.
-   * @param[in] symbolBackTransl A functor for reverse translation of symbols.
-   * @param[in] params A method of dumping.
-   * @return An aut_description structure describing an automaton.
+   * @brief  Dumps an automaton to an AutDescription structure
+   *
+   * @param[in]  stateBackTransl   Reverse translator between string
+                                   and internal representation of a state
+   * @param[in]  symbolBackTransl  Reverse translator between string
+                                   and internal representation of a symbol
+   * @param[in]  params            Explicit or symbolic method of dumping
+   *
+   * @return  Structure describing an automaton
    */
   AutDescription DumpToAutDesc(
     StateBackTranslStrict &  stateBackTransl,
@@ -288,10 +343,11 @@ public: // public methods
   ) const;
 
   /**
-   * @brief Adding a symbolic transition.
-   * @param[in] lstate A string representation of a left-side state.
-   * @param[in] symbol A string representation of a symbol.
-   * @param[in] rstate A string representation of a right-side state.
+   * @brief  Adds a transition
+   *
+   * @param[in]  lstate  Symbolic (string) representation of a left-side state
+   * @param[in]  symbol  Symbolic (string) representation of a symbol
+   * @param[in]  rstate  Symbolic (string) representation of a right-side state
    */
   void AddTransition(
     const std::string & lstate,
@@ -300,19 +356,52 @@ public: // public methods
   );
 
   /**
-   * @brief Adding a symbolic initial state.
-   * @param[in] state A string representation of a initial state.
+   * @brief  Adds a transition
+   *
+   * @param[in]  lstate  Symbolic representation of a left-side state
+   * @param[in]  symbol  Symbolic representation of a symbol
+   * @param[in]  rstate  Symbolic representation of a right-side state
+   */
+  void AddTransition(
+    const SymbolicVarAsgn & lstate,
+    const SymbolicVarAsgn & symbol,
+    const SymbolicVarAsgn & rstate
+  );
+
+  /**
+   * @brief  Adds an initial state
+   *
+   * @param[in]  state  Symbolic (string) representation of an initial state
    */
   void AddInitialState(
     const std::string & state
   );
 
   /**
-   * @brief Adding a symbolic final state.
-   * @param[in] state A string representation of a final state.
+   * @brief  Adds an initial state
+   *
+   * @param[in]  state  Symbolic representation of an initial state
+   */
+  void AddInitialState(
+    const SymbolicVarAsgn & state
+  );
+
+  /**
+   * @brief  Adds a final state
+   *
+   * @param[in]  state  Symbolic (string) representation of a final state
    */
   void AddFinalState(
     const std::string & state
+  );
+
+  /**
+   * @brief  Adds a final state
+   *
+   * @param[in]  state  Symbolic representation of a final state
+   */
+  void AddFinalState(
+    const SymbolicVarAsgn & state
   );
 };
 

@@ -514,48 +514,63 @@ public:   // public methods
 	}
 
   /**
-   * @brief Obtains all assignments.
-   * @return A list of assignments.
+   * @brief  Obtains all assignments
+   *
+   * @return  List of assignments
    */
   SymbolicVarAsgn::AssignmentList GetAllAssignments() const
   {
+    assert(!IsNull(root_));
+
     SymbolicVarAsgn::AssignmentList vec;
-    VarType var = 0;
+    VarType var = 1; // default number of variables in empty mtbdd
 
     if (IsInternal(root_))
-    {
-      var = GetVarFromInternal(root_);
+    { // in case of internal node determine number of variables in assignment
+      var = GetVarFromInternal(root_) + 1; 
     }
 
-    SymbolicVarAsgn asgn(var + 1);
+    SymbolicVarAsgn asgn = SymbolicVarAsgn(var);
     RecTraverse(root_, asgn, vec);
 
     return vec;
   }
 
   /**
-   * @brief Recursive traverse of mtbdd.
-   * @param[in] node Node to traverse.
-   * @param[in] asgn Assignment in-process.
-   * @param[out] vec Vector to fill with valid paths.
+   * @brief  Recursive traverse of mtbdd to obtain all assignments
+   *
+   * @param[in]  node  Node to traverse
+   * @param[in]  asgn  Assignment to be completed by traverse
+   * @param[out]  vec  Vector to be filled with assignments
    */
   void RecTraverse(
-    const NodePtrType node,
+    const NodePtrType & node,
     SymbolicVarAsgn & asgn,
     SymbolicVarAsgn::AssignmentList & vec
   ) const
   {
     assert(!IsNull(node));
 
-		if (IsInternal(node))
+		if (IsInternal(node)) 
     { // internal node
-      SymbolicVarAsgn asgnLow(asgn);
-      SymbolicVarAsgn asgnHigh(asgn);
-      asgnLow.SetIthVariableValue(GetVarFromInternal(node), SymbolicVarAsgn::ZERO);
-      asgnHigh.SetIthVariableValue(GetVarFromInternal(node), SymbolicVarAsgn::ONE);
+      SymbolicVarAsgn lowAsgn(asgn);
+      SymbolicVarAsgn highAsgn(asgn);
 
-      RecTraverse(GetLowFromInternal(node), asgnLow, vec); // traverse low successor
-      RecTraverse(GetHighFromInternal(node), asgnHigh, vec); // traverse high successor
+      // low successor assignment
+      lowAsgn.SetIthVariableValue(
+        GetVarFromInternal(node),
+        SymbolicVarAsgn::ZERO
+      );
+      // high successor assignment
+      highAsgn.SetIthVariableValue(
+        GetVarFromInternal(node),
+        SymbolicVarAsgn::ONE
+      );
+
+      // continue with low successor
+      RecTraverse(GetLowFromInternal(node), lowAsgn, vec);
+      // continue with high successor
+      RecTraverse(GetHighFromInternal(node), highAsgn, vec);
     }
 
     else
@@ -563,7 +578,7 @@ public:   // public methods
       assert(IsLeaf(node));
 
       if (GetDataFromLeaf(node) != defaultValue_)
-      { // assignment is valid
+      { // valid assignment
         vec.push_back(asgn);
       }
     }

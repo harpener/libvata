@@ -4,9 +4,9 @@
  *  Copyright (c) 2014 Jiri Chromecka <xchrom12@stud.fit.vutbr.cz>
  *
  *  Description:
- *  Source file for a symbolically represented FA (facade).
+ *    Source file for a symbolically represented finite automaton (facade).
  *****************************************************************************/
- 
+
 #include <vata/symbolic_finite_aut.hh>
 #include "symbolic_finite_aut_core.hh"
 #include "symbolic_loadable_aut.hh"
@@ -14,12 +14,12 @@
 using VATA::SymbolicFiniteAut;
 
 SymbolicFiniteAut::SymbolicFiniteAut()
-  : core_(new SymAutCore(SymAutCore::ParentAut()))
+  : core_(new Core(Core::ParentAut()))
 {}
 
 SymbolicFiniteAut::SymbolicFiniteAut(
   const SymbolicFiniteAut & aut
-) : core_(new SymAutCore(*aut.core_))
+) : core_(new Core(*aut.core_))
 {}
 
 SymbolicFiniteAut::SymbolicFiniteAut(
@@ -255,6 +255,21 @@ void SymbolicFiniteAut::AddTransition(
 {
   assert(this->core_ != nullptr);
 
+  this->core_->AddTransition(
+    SymbolicVarAsgn(lstate),
+    SymbolicVarAsgn(symbol),
+    SymbolicVarAsgn(rstate)
+  );
+}
+
+void SymbolicFiniteAut::AddTransition(
+    const SymbolicVarAsgn & lstate,
+    const SymbolicVarAsgn & symbol,
+    const SymbolicVarAsgn & rstate
+)
+{
+  assert(this->core_ != nullptr);
+
   this->core_->AddTransition(lstate, symbol, rstate);
 }
 
@@ -264,11 +279,29 @@ void SymbolicFiniteAut::AddInitialState(
 {
   assert(this->core_ != nullptr);
 
+  this->core_->AddInitialState(SymbolicVarAsgn(state));
+}
+
+void SymbolicFiniteAut::AddInitialState(
+  const SymbolicVarAsgn & state
+)
+{
+  assert(this->core_ != nullptr);
+
   this->core_->AddInitialState(state);
 }
 
 void SymbolicFiniteAut::AddFinalState(
   const std::string & state
+)
+{
+  assert(this->core_ != nullptr);
+
+  this->core_->AddFinalState(SymbolicVarAsgn(state));
+}
+
+void SymbolicFiniteAut::AddFinalState(
+  const SymbolicVarAsgn & state
 )
 {
   assert(this->core_ != nullptr);
