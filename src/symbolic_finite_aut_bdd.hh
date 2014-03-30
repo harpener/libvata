@@ -243,6 +243,20 @@ public: // instantiation
 public: // methods
 
   /**
+   * @brief  BDD getter
+   *
+   * @return  BDD pointer
+   */
+  BDD GetBDD();
+
+  /**
+   * @brief  BDD setter
+   *
+   * @param[in] BDD to be set
+   */
+  void SetBDD(BDD bdd);
+
+  /**
    * @brief  Adds an assignment to a BDD
    *
    * @param[in]  asgn  Assignment to be added

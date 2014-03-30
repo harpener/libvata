@@ -66,6 +66,20 @@ public: // public data types
   using SymbolBackTranslStrict =
   VATA::SymbolicFiniteAut::SymbolBackTranslStrict;
 
+  /**
+   * @brief  Maps internal representation of a state to another
+             for purposes of some operations (e.g. union, intersection)
+   */
+	using StateToStateMap = VATA::SymbolicFiniteAut::StateToStateMap;
+
+  /// @brief  Translator using StateToStateMap with addition allowed
+	using StateToStateTranslWeak =
+  VATA::SymbolicFiniteAut::StateToStateTranslWeak;
+
+  /// @brief  Translator using StateToStateMap with addition forbidden
+	using StateToStateTranslStrict =
+   VATA::SymbolicFiniteAut::StateToStateTranslStrict;
+  
 private: // private data types
 
   /// @brief  Internal transition
@@ -292,9 +306,43 @@ public: // public methods
     assert(initialStates_ != nullptr);
     assert(finalStates_   != nullptr);
 
-    AssignmentList transitionList   = transitions_->GetAllAssignments();
-    AssignmentList initialStateList = initialStates_->GetAllAssignments();
-    AssignmentList finalStatesList  = finalStates_->GetAllAssignments();
+    AssignmentList tempTransitionList   = transitions_->GetAllAssignments();
+    AssignmentList tempInitialStateList = initialStates_->GetAllAssignments();
+    AssignmentList tempFinalStatesList  = finalStates_->GetAllAssignments();
+
+    AssignmentList transitionList;
+    AssignmentList initialStateList;
+    AssignmentList finalStatesList;
+
+    for (auto asgn : tempTransitionList)
+    {
+      AssignmentList concreteAsgnList = asgn.GetVectorOfConcreteSymbols();
+
+      for (auto concreteAsgn : concreteAsgnList)
+      {
+        transitionList.push_back(concreteAsgn);
+      }
+    }
+
+    for (auto asgn : tempInitialStateList)
+    {
+      AssignmentList concreteAsgnList = asgn.GetVectorOfConcreteSymbols();
+
+      for (auto concreteAsgn : concreteAsgnList)
+      {
+        initialStateList.push_back(concreteAsgn);
+      }      
+    }
+
+    for (auto asgn : tempFinalStatesList)
+    {
+      AssignmentList concreteAsgnList = asgn.GetVectorOfConcreteSymbols();
+      
+      for (auto concreteAsgn : concreteAsgnList)
+      {
+        finalStatesList.push_back(concreteAsgn);
+      }
+    }
 
     AutDescription desc;
 
@@ -387,6 +435,26 @@ public: // public methods
    */
   void AddFinalState(
     const SymbolicVarAsgn & state
+  );
+
+  /**
+   * @brief  Union of two automata
+   *
+   * @note
+   * Symbolically represented states must have the same number of variables?
+   *
+   * @param  lhs  First automaton for union
+   * @param  rhs  Second automaton for union
+   * @param  pTranslMapLhs  Translation map of states of first automaton
+   * @param  pTranslMapRhs  Translation map of states of second automaton
+   *
+   * return  Union of given automata
+   */
+	static SymbolicFiniteAutCore Union(
+  	const SymbolicFiniteAutCore & lhs,
+  	const SymbolicFiniteAutCore & rhs,
+  	StateToStateMap *             pTranslMapLhs = nullptr,
+  	StateToStateMap *             pTranslMapRhs = nullptr
   );
 };
 

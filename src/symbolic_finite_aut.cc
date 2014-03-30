@@ -59,6 +59,11 @@ SymbolicFiniteAut & SymbolicFiniteAut::operator=(
   return *this;
 }
 
+SymbolicFiniteAut::SymbolicFiniteAut(
+  Core && core
+) : core_(new Core(std::move(core)))
+{}
+
 void SymbolicFiniteAut::LoadFromString(
   VATA::Parsing::AbstrParser & parser,
   const std::string &          str,
@@ -307,4 +312,40 @@ void SymbolicFiniteAut::AddFinalState(
   assert(this->core_ != nullptr);
 
   this->core_->AddFinalState(state);
+}
+
+SymbolicFiniteAut SymbolicFiniteAut::Union(
+		const SymbolicFiniteAut & lhs,
+		const SymbolicFiniteAut & rhs,
+		StateToStateMap *         pTranslMapLhs,
+		StateToStateMap *         pTranslMapRhs
+)
+{
+  assert(lhs.core_ != nullptr);
+  assert(rhs.core_ != nullptr);
+
+  return SymbolicFiniteAut(
+    Core::Union(
+      *lhs.core_,
+      *rhs.core_,
+      pTranslMapLhs,
+      pTranslMapRhs
+    )
+  );
+}
+
+SymbolicFiniteAut SymbolicFiniteAut::UnionDisjointStates(
+		const SymbolicFiniteAut & lhs,
+		const SymbolicFiniteAut & rhs
+)
+{
+  assert(lhs.core_ != nullptr);
+  assert(rhs.core_ != nullptr);
+
+  return SymbolicFiniteAut(
+    Core::Union(
+      *lhs.core_,
+      *rhs.core_
+    )
+  );
 }

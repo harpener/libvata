@@ -1,4 +1,4 @@
-// example3.cc - loading and dumping an automaton
+// example8.cc - loading and dumping an automaton using api
 
 // VATA headers
 #include <vata/symbolic_finite_aut.hh>
@@ -10,11 +10,11 @@
 	"States        000X0 100X0 010X0 110X0 001X0\n"
 	"Final States  100X0 010X0 001X0\n"
 	"Transitions\n"
-	"000X0        -> 000X0\n"
-	"100X0(000X1) -> 100X0\n"
-	"010X0(000X1) -> 010X0\n"
-	"110X0(100X1) -> 110X0\n"
-	"001X0(100X1) -> 001X0\n"; */
+	"000X1        -> 000X0\n"
+	"100X1(000X0) -> 100X0\n"
+	"010X1(000X0) -> 010X0\n"
+	"110X1(100X0) -> 110X0\n"
+	"001X1(100X0) -> 001X0\n"; */
 
 typedef VATA::SymbolicFiniteAut Automaton;
 

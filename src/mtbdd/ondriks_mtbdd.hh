@@ -527,7 +527,7 @@ public:   // public methods
 
     if (IsInternal(root_))
     { // in case of internal node determine number of variables in assignment
-      var = GetVarFromInternal(root_) + 1; 
+      var += GetVarFromInternal(root_); 
     }
 
     SymbolicVarAsgn asgn = SymbolicVarAsgn(var);

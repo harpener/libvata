@@ -74,6 +74,18 @@ public: // data types
                                    SymbolDict::MapBwdType
                                  >;
 
+  /**
+   * @brief  Maps internal representation of a state to another
+             for purposes of some operations (e.g. union, intersection)
+   */
+	using StateToStateMap = std::unordered_map<size_t, size_t>;
+
+  /// @brief  Translator using StateToStateMap with addition allowed
+	using StateToStateTranslWeak = VATA::Util::TranslatorWeak<StateToStateMap>;
+
+  /// @brief  Translator using StateToStateMap with addition forbidden
+	using StateToStateTranslStrict =
+  VATA::Util::TranslatorStrict<StateToStateMap>;
 private: // data types
 
   /// @brief  Loadable symbolically represented finite automaton core
@@ -87,7 +99,7 @@ private: // data members
   /// @brief  Core instance
   CorePtr core_;
 
-public: // instantiation
+public: // public instantiation
 
   /// @brief  Default constructor
   SymbolicFiniteAut();
@@ -133,6 +145,17 @@ public: // instantiation
    */
   SymbolicFiniteAut & operator=(
     SymbolicFiniteAut && rhs
+  );
+
+private: // private instantiation
+
+  /**
+   * @brief  Create constructor
+   *
+   * @param[in]  core  Automaton core for new automaton
+   */
+  explicit SymbolicFiniteAut(
+    Core && core
   );
 
 public: // public methods
@@ -402,6 +425,36 @@ public: // public methods
    */
   void AddFinalState(
     const SymbolicVarAsgn & state
+  );
+
+  /**
+   * @brief  Union of two symbolic finite automata
+   *
+   * @param  lhs  First automaton for union
+   * @param  rhs  Second automaton for union
+   * @param  pTranslMapLhs  Translation map of states of first automaton
+   * @param  pTranslMapRhs  Translation map of states of second automaton
+   *
+   * return  Union of given automata
+   */
+	static SymbolicFiniteAut Union(
+		const SymbolicFiniteAut & lhs,
+		const SymbolicFiniteAut & rhs,
+		StateToStateMap *         pTranslMapLhs = nullptr,
+		StateToStateMap *         pTranslMapRhs = nullptr
+  );
+
+  /**
+   * @brief  Union of two disjoint symbolic finite automata
+   *
+   * @param  lhs  First automaton for union
+   * @param  rhs  Second automaton for union
+   *
+   * return  Union of given automata
+   */
+	static SymbolicFiniteAut UnionDisjointStates(
+		const SymbolicFiniteAut & lhs,
+		const SymbolicFiniteAut & rhs
   );
 };
 

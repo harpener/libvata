@@ -1,4 +1,4 @@
-// example3.cc - loading and dumping an automaton
+// example6.cc - explicit loading and dumping an automaton
 
 // VATA headers
 #include <vata/symbolic_finite_aut.hh>

@@ -62,6 +62,20 @@ SymbolicFiniteAutBDD & SymbolicFiniteAutBDD::operator=(
   return *this;
 }
 
+SymbolicFiniteAutBDD::BDD SymbolicFiniteAutBDD::GetBDD()
+{
+  assert(this->mtbdd_ != nullptr);
+
+  return *this->mtbdd_;
+}
+
+void SymbolicFiniteAutBDD::SetBDD(BDD bdd)
+{
+  assert(this->mtbdd_ != nullptr);
+
+  *this->mtbdd_ = bdd;
+}
+
 void SymbolicFiniteAutBDD::AddAssignment(
   const SymbolicVarAsgn & asgn
 )
