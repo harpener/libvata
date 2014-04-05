@@ -76,7 +76,7 @@ public: // data types
 
   /**
    * @brief  Maps internal representation of a state to another
-             for purposes of some operations (e.g. union, intersection)
+             for purposes of some operations (e.g. union)
    */
 	using StateToStateMap = std::unordered_map<size_t, size_t>;
 
@@ -86,6 +86,17 @@ public: // data types
   /// @brief  Translator using StateToStateMap with addition forbidden
 	using StateToStateTranslStrict =
   VATA::Util::TranslatorStrict<StateToStateMap>;
+
+  /// @brief  A pair of states
+	using StatePair = std::pair<size_t, size_t>;
+
+  /**
+   * @brief  Maps internal representations of a pair of states to a single state
+             for purposes of some operations (e.g. intersection)
+   */
+	using ProductTranslMap =
+		std::unordered_map<StatePair, size_t, boost::hash<StatePair>>;
+
 private: // data types
 
   /// @brief  Loadable symbolically represented finite automaton core
@@ -428,7 +439,7 @@ public: // public methods
   );
 
   /**
-   * @brief  Union of two symbolic finite automata
+   * @brief  Union of two automata
    *
    * @param  lhs  First automaton for union
    * @param  rhs  Second automaton for union
@@ -445,16 +456,21 @@ public: // public methods
   );
 
   /**
-   * @brief  Union of two disjoint symbolic finite automata
+   * @brief  Intersection of two automata
    *
-   * @param  lhs  First automaton for union
-   * @param  rhs  Second automaton for union
+   * @note
+   * Symbolically represented states must have the same number of variables?
    *
-   * return  Union of given automata
+   * @param  lhs  First automaton for intersection
+   * @param  rhs  Second automaton for intersection
+   * @param  pTranslMap  Translation map of states
+   *
+   * return  Intersection of given automata
    */
-	static SymbolicFiniteAut UnionDisjointStates(
-		const SymbolicFiniteAut & lhs,
-		const SymbolicFiniteAut & rhs
+	static SymbolicFiniteAut Intersection(
+  	const SymbolicFiniteAut & lhs,
+  	const SymbolicFiniteAut & rhs,
+  	ProductTranslMap *        pTranslMap = nullptr
   );
 };
 

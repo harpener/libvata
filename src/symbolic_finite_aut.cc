@@ -334,18 +334,20 @@ SymbolicFiniteAut SymbolicFiniteAut::Union(
   );
 }
 
-SymbolicFiniteAut SymbolicFiniteAut::UnionDisjointStates(
+SymbolicFiniteAut SymbolicFiniteAut::Intersection(
 		const SymbolicFiniteAut & lhs,
-		const SymbolicFiniteAut & rhs
+		const SymbolicFiniteAut & rhs,
+		ProductTranslMap *        pTranslMap
 )
 {
   assert(lhs.core_ != nullptr);
   assert(rhs.core_ != nullptr);
 
   return SymbolicFiniteAut(
-    Core::Union(
+    Core::Intersection(
       *lhs.core_,
-      *rhs.core_
+      *rhs.core_,
+      pTranslMap
     )
   );
 }

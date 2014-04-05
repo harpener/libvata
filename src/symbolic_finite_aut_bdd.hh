@@ -259,6 +259,15 @@ public: // methods
   /**
    * @brief  Adds an assignment to a BDD
    *
+   * @param[in]  str  Assignment (string) to be added
+   */
+  void AddAssignment(
+    const std::string & str
+  );
+
+  /**
+   * @brief  Adds an assignment to a BDD
+   *
    * @param[in]  asgn  Assignment to be added
    */
   void AddAssignment(

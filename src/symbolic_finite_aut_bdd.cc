@@ -77,6 +77,15 @@ void SymbolicFiniteAutBDD::SetBDD(BDD bdd)
 }
 
 void SymbolicFiniteAutBDD::AddAssignment(
+  const std::string & str
+)
+{
+  SymbolicVarAsgn asgn(str);
+
+  this->AddAssignment(asgn);
+}
+
+void SymbolicFiniteAutBDD::AddAssignment(
   const SymbolicVarAsgn & asgn
 )
 {

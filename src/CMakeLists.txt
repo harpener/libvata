@@ -89,6 +89,7 @@ add_library(libvata STATIC
   symbolic_finite_aut_bdd.cc
   symbolic_finite_aut_core.cc
   symbolic_finite_aut_union.cc
+  symbolic_finite_aut_isect.cc
   convert.cc
   incl_param.cc
   fake_file.cc

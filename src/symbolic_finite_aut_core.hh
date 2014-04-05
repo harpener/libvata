@@ -79,7 +79,16 @@ public: // public data types
   /// @brief  Translator using StateToStateMap with addition forbidden
 	using StateToStateTranslStrict =
    VATA::SymbolicFiniteAut::StateToStateTranslStrict;
-  
+
+  /// @brief  A pair of states
+	using StatePair = VATA::SymbolicFiniteAut::StatePair;
+
+  /**
+   * @brief  Maps internal representations of a pair of states to a single state
+             for purposes of some operations (e.g. intersection)
+   */
+	using ProductTranslMap = VATA::SymbolicFiniteAut::ProductTranslMap;
+
 private: // private data types
 
   /// @brief  Internal transition
@@ -438,6 +447,32 @@ public: // public methods
   );
 
   /**
+   * @brief  Inserts a prefix to all states in BDDs
+   *
+   * @param  str         Prefix to be inserted
+   * @param  pos         Position of insertion
+   * @param  pTranslMap  Translation map of states
+   */
+  SymbolicFiniteAutCore ReindexStates(
+    const std::string & str,
+    const size_t & pos,
+    StateToStateMap *   pTranslMap = nullptr
+  ) const;
+
+  /**
+   * @brief  Inserts a prefix to all states in BDDs
+   *
+   * @param  asgn        Prefix to be inserted
+   * @param  pos         Position of insertion
+   * @param  pTranslMap  Translation map of states
+   */
+  SymbolicFiniteAutCore ReindexStates(
+    const SymbolicVarAsgn & asgn,
+    const size_t & pos,
+    StateToStateMap *   pTranslMap = nullptr
+  ) const;
+
+  /**
    * @brief  Union of two automata
    *
    * @note
@@ -455,6 +490,24 @@ public: // public methods
   	const SymbolicFiniteAutCore & rhs,
   	StateToStateMap *             pTranslMapLhs = nullptr,
   	StateToStateMap *             pTranslMapRhs = nullptr
+  );
+
+  /**
+   * @brief  Intersection of two automata
+   *
+   * @note
+   * Symbolically represented states must have the same number of variables?
+   *
+   * @param  lhs  First automaton for intersection
+   * @param  rhs  Second automaton for intersection
+   * @param  pTranslMap  Translation map of states
+   *
+   * return  Intersection of given automata
+   */
+	static SymbolicFiniteAutCore Intersection(
+  	const SymbolicFiniteAutCore & lhs,
+  	const SymbolicFiniteAutCore & rhs,
+  	ProductTranslMap *            pTranslMap = nullptr
   );
 };
 

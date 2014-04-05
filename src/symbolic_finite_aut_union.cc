@@ -33,148 +33,25 @@ SymbolicFiniteAutCore SymbolicFiniteAutCore::Union(
     pTranslMapRhs = &translMapRhs;
   }
 
-  // states are renamed by addition of a single variable
-  result.stateVars_ = lhs.stateVars_ + 1;
-  result.symbolVars_ = lhs.symbolVars_;
+  SymbolicFiniteAutCore tempLhs = lhs.ReindexStates("0", 0, pTranslMapLhs);
+  SymbolicFiniteAutCore tempRhs = rhs.ReindexStates("1", 0, pTranslMapRhs);
 
-  AssignmentList lhsTransitions = lhs.transitions_->GetAllAssignments();
-  AssignmentList rhsTransitions = rhs.transitions_->GetAllAssignments();
-  AssignmentList lhsInitialStates = lhs.initialStates_->GetAllAssignments();
-  AssignmentList rhsInitialStates = rhs.initialStates_->GetAllAssignments();
-  AssignmentList lhsFinalStates = lhs.finalStates_->GetAllAssignments();
-  AssignmentList rhsFinalStates = rhs.finalStates_->GetAllAssignments();
+  result.stateVars_ = tempLhs.stateVars_;
+  result.symbolVars_ = tempLhs.symbolVars_;
 
-  for (auto asgn : lhsTransitions)
-  {
-    SymbolicVarAsgn lstate, symbol, rstate;
-    SymbolicFiniteAutBDD::SplitTransition(
-      asgn,
-      lhs.stateVars_,
-      lhs.symbolVars_,
-      lstate,
-      symbol,
-      rstate
-    );
-    SymbolicVarAsgn newlstate = SymbolicVarAsgn("0");
-    newlstate.append(lstate);
-    SymbolicVarAsgn newrstate = SymbolicVarAsgn("0");
-    newrstate.append(rstate);
-    SymbolicVarAsgn newasgn = newlstate;
-    newasgn.append(symbol);
-    newasgn.append(newrstate);
+  SymbolicFiniteAutBDD::UnionApplyFunctor unionFunc;
 
-    pTranslMapLhs->insert(
-      std::pair<size_t, size_t>(
-        SymbolicFiniteAutBDD::FromSymbolic(lstate),
-        SymbolicFiniteAutBDD::FromSymbolic(newlstate)
-      )
-    );
-
-    pTranslMapLhs->insert(
-      std::pair<size_t, size_t>(
-        SymbolicFiniteAutBDD::FromSymbolic(rstate),
-        SymbolicFiniteAutBDD::FromSymbolic(newrstate)
-      )
-    );
-
-    result.transitions_->AddAssignment(newasgn);
-  }
-
-  for (auto asgn : rhsTransitions)
-  {
-    SymbolicVarAsgn lstate, symbol, rstate;
-    SymbolicFiniteAutBDD::SplitTransition(
-      asgn,
-      lhs.stateVars_,
-      lhs.symbolVars_,
-      lstate,
-      symbol,
-      rstate
-    );
-    SymbolicVarAsgn newlstate = SymbolicVarAsgn("1");
-    newlstate.append(lstate);
-    SymbolicVarAsgn newrstate = SymbolicVarAsgn("1");
-    newrstate.append(rstate);
-    SymbolicVarAsgn newasgn = newlstate;
-    newasgn.append(symbol);
-    newasgn.append(newrstate);
-
-    pTranslMapRhs->insert(
-      std::pair<size_t, size_t>(
-        SymbolicFiniteAutBDD::FromSymbolic(lstate),
-        SymbolicFiniteAutBDD::FromSymbolic(newlstate)
-      )
-    );
-
-    pTranslMapRhs->insert(
-      std::pair<size_t, size_t>(
-        SymbolicFiniteAutBDD::FromSymbolic(rstate),
-        SymbolicFiniteAutBDD::FromSymbolic(newrstate)
-      )
-    );
-
-    result.transitions_->AddAssignment(newasgn);
-  }
-
-  for (auto asgn : lhsInitialStates)
-  {
-    SymbolicVarAsgn newasgn = SymbolicVarAsgn("0");
-    newasgn.append(asgn);
-
-    pTranslMapLhs->insert(
-      std::pair<size_t, size_t>(
-        SymbolicFiniteAutBDD::FromSymbolic(asgn),
-        SymbolicFiniteAutBDD::FromSymbolic(newasgn)
-      )
-    );
-
-    result.initialStates_->AddAssignment(newasgn);
-  }
-
-  for (auto asgn : rhsInitialStates)
-  {
-    SymbolicVarAsgn newasgn = SymbolicVarAsgn("1");
-    newasgn.append(asgn);
-
-    pTranslMapRhs->insert(
-      std::pair<size_t, size_t>(
-        SymbolicFiniteAutBDD::FromSymbolic(asgn),
-        SymbolicFiniteAutBDD::FromSymbolic(newasgn)
-      )
-    );
-
-    result.initialStates_->AddAssignment(newasgn);
-  }
-
-  for (auto asgn : lhsFinalStates)
-  {
-    SymbolicVarAsgn newasgn = SymbolicVarAsgn("0");
-    newasgn.append(asgn);
-
-    pTranslMapLhs->insert(
-      std::pair<size_t, size_t>(
-        SymbolicFiniteAutBDD::FromSymbolic(asgn),
-        SymbolicFiniteAutBDD::FromSymbolic(newasgn)
-      )
-    );
-
-    result.finalStates_->AddAssignment(newasgn);
-  }
-
-  for (auto asgn : rhsFinalStates)
-  {
-    SymbolicVarAsgn newasgn = SymbolicVarAsgn("1");
-    newasgn.append(asgn);
-
-    pTranslMapRhs->insert(
-      std::pair<size_t, size_t>(
-        SymbolicFiniteAutBDD::FromSymbolic(asgn),
-        SymbolicFiniteAutBDD::FromSymbolic(newasgn)
-      )
-    );
-
-    result.finalStates_->AddAssignment(newasgn);
-  }
+  result.transitions_->SetBDD(
+    unionFunc(tempLhs.transitions_->GetBDD(), tempRhs.transitions_->GetBDD())
+  );
+  result.initialStates_->SetBDD(
+    unionFunc(
+      tempLhs.initialStates_->GetBDD(), tempRhs.initialStates_->GetBDD()
+    )
+  );
+  result.finalStates_->SetBDD(
+    unionFunc(tempLhs.finalStates_->GetBDD(), tempRhs.finalStates_->GetBDD())
+  );
 
   return result;
 }

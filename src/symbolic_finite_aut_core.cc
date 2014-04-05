@@ -97,7 +97,7 @@ void SymbolicFiniteAutCore::LoadFromAutDescSymbolic(
         throw std::runtime_error("Number of variables in states differs.");
       }
 
-      this->initialStates_->AddAssignment(SymbolicVarAsgn(transition.third));
+      this->initialStates_->AddAssignment(transition.third);
     }
 
     else if (transition.first.size() > 1)
@@ -159,9 +159,7 @@ void SymbolicFiniteAutCore::LoadFromAutDescSymbolic(
       throw std::runtime_error("Number of variables in states differs.");
     }
 
-    this->finalStates_->AddAssignment(
-      SymbolicVarAsgn(finalState)
-    );
+    this->finalStates_->AddAssignment(finalState);
   }
 }
 
@@ -312,4 +310,111 @@ void SymbolicFiniteAutCore::AddFinalState(
   }
 
   this->finalStates_->AddAssignment(state);
+}
+
+SymbolicFiniteAutCore SymbolicFiniteAutCore::ReindexStates(
+  const std::string & str,
+  const size_t & pos,
+  StateToStateMap *   pTranslMap
+) const
+{
+  SymbolicVarAsgn asgn(str);
+
+  return this->ReindexStates(asgn, pos, pTranslMap);
+}
+
+SymbolicFiniteAutCore SymbolicFiniteAutCore::ReindexStates(
+  const SymbolicVarAsgn & asgn,
+  const size_t & pos,
+  StateToStateMap *   pTranslMap
+) const
+{
+  assert(this->transitions_ != nullptr);
+  assert(this->initialStates_ != nullptr);
+  assert(this->finalStates_ != nullptr);
+
+  SymbolicFiniteAutCore result;
+  StateToStateMap translMap;
+
+  if (pTranslMap == nullptr)
+  { // unused state translation
+    pTranslMap = &translMap;
+  }
+
+  AssignmentList transitionsList = this->transitions_->GetAllAssignments();
+  AssignmentList initialStatesList = this->initialStates_->GetAllAssignments();
+  AssignmentList finalStatesList = this->finalStates_->GetAllAssignments();
+
+  std::string strAsgn = asgn.ToString();
+
+  for (auto transition : transitionsList)
+  {
+    std::string lstate, symbol, rstate;
+
+    SymbolicFiniteAutBDD::SplitTransition(
+      transition,
+      this->stateVars_,
+      this->symbolVars_,
+      lstate,
+      symbol,
+      rstate
+    );
+
+    std::string newLstate = lstate;
+    newLstate.insert(pos, strAsgn);
+    std::string newRstate = rstate;
+    newRstate.insert(pos, strAsgn);
+    std::string newTransition = newLstate + symbol + newRstate;
+
+    pTranslMap->insert(
+      std::make_pair(
+        SymbolicFiniteAutBDD::FromSymbolic(lstate),
+        SymbolicFiniteAutBDD::FromSymbolic(newLstate)
+      )
+    );
+
+    pTranslMap->insert(
+      std::make_pair(
+        SymbolicFiniteAutBDD::FromSymbolic(rstate),
+        SymbolicFiniteAutBDD::FromSymbolic(newRstate)
+      )
+    );
+
+    result.transitions_->AddAssignment(newTransition);
+  }
+
+  for (auto initialState : initialStatesList)
+  {
+    std::string newInitialState = initialState.ToString();
+    newInitialState.insert(pos, strAsgn);
+
+    pTranslMap->insert(
+      std::make_pair(
+        SymbolicFiniteAutBDD::FromSymbolic(initialState),
+        SymbolicFiniteAutBDD::FromSymbolic(newInitialState)
+      )
+    );
+
+    result.initialStates_->AddAssignment(newInitialState);
+  }
+
+  for (auto finalState : finalStatesList)
+  {
+    std::string newFinalState = finalState.ToString();
+    newFinalState.insert(pos, strAsgn);
+
+    pTranslMap->insert(
+      std::make_pair(
+        SymbolicFiniteAutBDD::FromSymbolic(finalState),
+        SymbolicFiniteAutBDD::FromSymbolic(newFinalState)
+      )
+    );
+
+    result.finalStates_->AddAssignment(newFinalState);
+  }
+
+  result.stateVars_ = this->stateVars_ + strAsgn.size();
+  result.symbolVars_ = this->symbolVars_;
+
+  return result;
 }
