@@ -315,43 +315,18 @@ public: // public methods
     assert(initialStates_ != nullptr);
     assert(finalStates_   != nullptr);
 
-    AssignmentList tempTransitionList   = transitions_->GetAllAssignments();
-    AssignmentList tempInitialStateList = initialStates_->GetAllAssignments();
-    AssignmentList tempFinalStatesList  = finalStates_->GetAllAssignments();
-
-    AssignmentList transitionList;
-    AssignmentList initialStateList;
-    AssignmentList finalStatesList;
-
-    for (auto asgn : tempTransitionList)
-    {
-      AssignmentList concreteAsgnList = asgn.GetVectorOfConcreteSymbols();
-
-      for (auto concreteAsgn : concreteAsgnList)
-      {
-        transitionList.push_back(concreteAsgn);
-      }
-    }
-
-    for (auto asgn : tempInitialStateList)
-    {
-      AssignmentList concreteAsgnList = asgn.GetVectorOfConcreteSymbols();
-
-      for (auto concreteAsgn : concreteAsgnList)
-      {
-        initialStateList.push_back(concreteAsgn);
-      }      
-    }
-
-    for (auto asgn : tempFinalStatesList)
-    {
-      AssignmentList concreteAsgnList = asgn.GetVectorOfConcreteSymbols();
-      
-      for (auto concreteAsgn : concreteAsgnList)
-      {
-        finalStatesList.push_back(concreteAsgn);
-      }
-    }
+    AssignmentList transitionList   = transitions_->GetAllAssignments(
+      stateVars_ + symbolVars_ + stateVars_,
+      true
+    );
+    AssignmentList initialStateList = initialStates_->GetAllAssignments(
+      stateVars_,
+      true
+    );
+    AssignmentList finalStatesList  = finalStates_->GetAllAssignments(
+      stateVars_,
+      true
+    );
 
     AutDescription desc;
 
@@ -508,6 +483,28 @@ public: // public methods
   	const SymbolicFiniteAutCore & lhs,
   	const SymbolicFiniteAutCore & rhs,
   	ProductTranslMap *            pTranslMap = nullptr
+  );
+
+  /**
+   * @brief  Compute a simulation on states
+   *
+   * @param  aut  Given automaton
+   *
+   * return  String describing states in simulation relation
+   */
+	static std::string ComputeSimulation(
+  	const SymbolicFiniteAutCore & aut
+  );
+
+  /**
+   * @brief  Compute an initial relation
+   *
+   * @param  aut  Given automaton
+   *
+   * return  BDD with initial relation
+   */
+  static SymbolicFiniteAutBDD ComputeInitialRelation(
+    const SymbolicFiniteAutCore & aut
   );
 };
 

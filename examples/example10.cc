@@ -1,4 +1,4 @@
-// example9.cc - union of two symbolically loaded automata
+// example10.cc - union of two symbolically loaded automata
 
 // VATA headers
 #include <vata/symbolic_finite_aut.hh>

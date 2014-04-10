@@ -1,4 +1,4 @@
-// example9.cc - intersection of two explicitly loaded automata
+// example11.cc - intersection of two explicitly loaded automata
 
 // VATA headers
 #include <vata/symbolic_finite_aut.hh>

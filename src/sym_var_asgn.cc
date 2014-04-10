@@ -61,10 +61,12 @@ void SymbolicVarAsgn::getAllSymbols(
 	{
 		if (var.GetIthVariableValue(pos) == DONT_CARE)
 		{	// in case we fork
-			var.SetIthVariableValue(pos, ZERO);
-			getAllSymbols(var, vec, pos + 1);
-			var.SetIthVariableValue(pos, ONE);
-			getAllSymbols(var, vec, pos + 1);
+      SymbolicVarAsgn zeroVar(var);
+      SymbolicVarAsgn oneVar(var);
+			zeroVar.SetIthVariableValue(pos, ZERO);
+			getAllSymbols(zeroVar, vec, pos + 1);
+			oneVar.SetIthVariableValue(pos, ONE);
+			getAllSymbols(oneVar, vec, pos + 1);
 		}
 		else
 		{

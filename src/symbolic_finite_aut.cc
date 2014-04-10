@@ -351,3 +351,12 @@ SymbolicFiniteAut SymbolicFiniteAut::Intersection(
     )
   );
 }
+
+std::string SymbolicFiniteAut::ComputeSimulation(
+  const SymbolicFiniteAut & aut
+)
+{
+  assert(aut.core_ != nullptr);
+
+  return Core::ComputeSimulation(*aut.core_);
+}

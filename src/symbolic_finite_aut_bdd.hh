@@ -277,9 +277,15 @@ public: // methods
   /**
    * @brief  Obtain all assignments in a BDD
    *
+   * @param  concretize  Concretize all assignments
+   * @param  vars  Number of variables in assignment
+   *
    * @return  List of assignments.
    */
-  AssignmentList GetAllAssignments() const;
+  AssignmentList GetAllAssignments(
+    const size_t & vars,
+    const bool & concretize = false
+  ) const;
 
   /**
    * @brief  Conversion from SymbolicVarAsgn to size_t
@@ -423,6 +429,38 @@ public: // methods
     std::string &           lstate,
     std::string &           symbol,
     std::string &           rstate
+  );
+
+  /**
+   * @brief  Existential quantification
+   *
+   * @param  bdd      BDD representing relation of n > 1 sets
+   * @param  allVars  Number of variables in assignment
+   * @param  vars     Number of variables of an element in last set
+   *
+   * @return  BDD representing relation of such n-1 sets, for which
+              at least one element in the n-th set was in relation.
+   */
+  static SymbolicFiniteAutBDD Exists(
+    const SymbolicFiniteAutBDD & bdd,
+    const size_t & allVars,
+    const size_t & vars
+  );
+
+  /**
+   * @brief  Universal quantification
+   *
+   * @param  bdd      BDD representing relation of n > 1 sets
+   * @param  allVars  Number of variables in assignment
+   * @param  vars     Number of variables of an element in last set
+   *
+   * @return  BDD representing relation of such n-1 sets, for which
+              all elements in the n-th set were in relation.
+   */
+  static SymbolicFiniteAutBDD ForAll(
+    const SymbolicFiniteAutBDD & bdd,
+    const size_t & allVars,
+    const size_t & vars
   );
 };
 

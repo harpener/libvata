@@ -170,9 +170,15 @@ DumpToAutDescSymbolic() const
   assert(this->initialStates_ != nullptr);
   assert(this->finalStates_   != nullptr);
 
-  AssignmentList transitionList = transitions_->GetAllAssignments();
-  AssignmentList initialStateList = initialStates_->GetAllAssignments();
-  AssignmentList finalStatesList = finalStates_->GetAllAssignments();
+  AssignmentList transitionList = transitions_->GetAllAssignments(
+    this->stateVars_ + this->symbolVars_ + this->stateVars_
+  );
+  AssignmentList initialStateList = initialStates_->GetAllAssignments(
+    this->stateVars_
+  );
+  AssignmentList finalStatesList = finalStates_->GetAllAssignments(
+    this->stateVars_
+  );
 
   AutDescription desc;
 
@@ -341,9 +347,15 @@ SymbolicFiniteAutCore SymbolicFiniteAutCore::ReindexStates(
     pTranslMap = &translMap;
   }
 
-  AssignmentList transitionsList = this->transitions_->GetAllAssignments();
-  AssignmentList initialStatesList = this->initialStates_->GetAllAssignments();
-  AssignmentList finalStatesList = this->finalStates_->GetAllAssignments();
+  AssignmentList transitionsList = this->transitions_->GetAllAssignments(
+    this->stateVars_ + this->symbolVars_ + this->stateVars_
+  );
+  AssignmentList initialStatesList = this->initialStates_->GetAllAssignments(
+    this->stateVars_
+  );
+  AssignmentList finalStatesList = this->finalStates_->GetAllAssignments(
+    this->stateVars_
+  );
 
   std::string strAsgn = asgn.ToString();
 

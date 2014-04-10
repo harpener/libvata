@@ -95,12 +95,39 @@ void SymbolicFiniteAutBDD::AddAssignment(
   *this->mtbdd_ = unionFunc(*this->mtbdd_, BDD(asgn, true, false));
 }
 
-SymbolicFiniteAutBDD::AssignmentList SymbolicFiniteAutBDD::GetAllAssignments()
+SymbolicFiniteAutBDD::AssignmentList SymbolicFiniteAutBDD::GetAllAssignments(
+  const size_t & vars,
+  const bool & concretize
+)
 const
 {
   assert(this->mtbdd_ != nullptr);
 
-  return this->mtbdd_->GetAllAssignments();
+  AssignmentList list = this->mtbdd_->GetAllAssignments();
+
+  for (AssignmentList::iterator it = list.begin(); it != list.end(); it++)
+  { // completes the assignment according to desired length
+    (*it).append(SymbolicVarAsgn(std::string(vars - (*it).length(), 'X')));
+  }
+
+  if (concretize)
+  { // we want concrete assignments
+    AssignmentList tempList;
+
+    for (auto elem : list)
+    { // for all assignments create a vector of concrete assignments
+      AssignmentList concreteList = elem.GetVectorOfConcreteSymbols();
+
+      for (auto concrete : concreteList)
+      { // for all concrete assignments push them back to a temporary vector
+        tempList.push_back(concrete);
+      }
+    }
+
+    list = tempList;
+  }
+
+  return list;
 }
 
 size_t SymbolicFiniteAutBDD::FromSymbolic(
@@ -241,4 +268,67 @@ void SymbolicFiniteAutBDD::SplitTransition(
   lstate = str.substr(0, stateVars);
   symbol = str.substr(stateVars, symbolVars);
   rstate = str.substr(stateVars + symbolVars, stateVars);
+}
+
+SymbolicFiniteAutBDD SymbolicFiniteAutBDD::Exists(
+  const SymbolicFiniteAutBDD & bdd,
+  const size_t & allVars,
+  const size_t & vars
+)
+{
+  SymbolicFiniteAutBDD result;
+
+  AssignmentList list = bdd.GetAllAssignments(allVars, true);
+
+  for (auto elem : list)
+  {
+    std::string str = elem.ToString();
+    size_t size = str.size();
+    str = str.substr(0, size - vars);
+    result.AddAssignment(str);
+  }
+
+  return result;
+}
+
+SymbolicFiniteAutBDD SymbolicFiniteAutBDD::ForAll(
+  const SymbolicFiniteAutBDD & bdd,
+  const size_t & allVars,
+  const size_t & vars
+)
+{
+  SymbolicFiniteAutBDD result;
+  AssignmentList list = bdd.GetAllAssignments(allVars, true);
+  std::set<std::string> allSets, prevSets, lastSet;
+
+  for (auto elem : list)
+  {
+    std::string elemStr = elem.ToString();
+    size_t size = elemStr.size();
+    allSets.insert(elemStr);
+    std::string prevElemStr = elemStr.substr(0, size - vars);
+    std::string lastElemStr = elemStr.substr(size - vars, size);
+    prevSets.insert(prevElemStr);
+    lastSet.insert(lastElemStr);
+  }
+
+  for (auto prevElem : prevSets)
+  {
+    bool found = true;
+
+    for (auto lastElem : lastSet)
+    {
+      if (allSets.find(prevElem + lastElem) == allSets.end())
+      {
+        found = false;
+      }
+    }
+
+    if (found)
+    {
+      result.AddAssignment(prevElem);
+    }
+  }
+
+  return result;
 }

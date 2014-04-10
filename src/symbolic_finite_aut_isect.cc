@@ -51,9 +51,15 @@ SymbolicFiniteAutCore SymbolicFiniteAutCore::Intersection(
 
   // intersection state translation after the operation
 
-  AssignmentList transitionsList = result.transitions_->GetAllAssignments();
-  AssignmentList initialStatesList = result.initialStates_->GetAllAssignments();
-  AssignmentList finalStatesList = result.finalStates_->GetAllAssignments();
+  AssignmentList transitionsList = result.transitions_->GetAllAssignments(
+    result.stateVars_ + result.symbolVars_ + result.stateVars_
+  );
+  AssignmentList initialStatesList = result.initialStates_->GetAllAssignments(
+    result.stateVars_
+  );
+  AssignmentList finalStatesList = result.finalStates_->GetAllAssignments(
+    result.stateVars_
+  );
 
   for (auto transition : transitionsList)
   {

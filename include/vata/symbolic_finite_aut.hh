@@ -472,6 +472,17 @@ public: // public methods
   	const SymbolicFiniteAut & rhs,
   	ProductTranslMap *        pTranslMap = nullptr
   );
+
+  /**
+   * @brief  Compute a simulation on states
+   *
+   * @param  aut  Given automaton
+   *
+   * return  String describing states in simulation relation
+   */
+	static std::string ComputeSimulation(
+  	const SymbolicFiniteAut & aut
+  );
 };
 
 #endif // _VATA_SYMBOLIC_FINITE_AUT_HH_
