@@ -1,4 +1,4 @@
-// example13.cc - simulation relation on automaton
+// example13.cc - simulation relation on explicitly loaded automaton
 
 // VATA headers
 #include <vata/symbolic_finite_aut.hh>
@@ -13,12 +13,12 @@ const char* autStr =
 	"Final States  q s\n"
 	"Transitions\n"
 	"x    -> p\n"
-	"a(p) -> q\n"
-	"b(p) -> r\n"
-	"a(q) -> t\n"
+	"a(p) -> p\n"
+	"b(p) -> q\n"
+	"a(q) -> q\n"
 	"b(q) -> s\n"
 	"a(r) -> s\n"
-	"b(r) -> p\n"
+	"b(r) -> t\n"
 	"a(s) -> u\n"
 	"b(s) -> q\n"
 	"a(t) -> p\n"
@@ -45,5 +45,5 @@ int main()
 	aut.LoadFromString(*parser, autStr, stateDict, symbolDict, "explicit");
 
   // compute simulation
-  std::cout << Automaton::ComputeSimulation(aut);
+  std::cout << Automaton::ComputeSimulation(aut, &stateDict);
 }

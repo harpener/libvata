@@ -19,38 +19,39 @@ SymbolicFiniteAutCore SymbolicFiniteAutCore::Union(
 )
 {
   SymbolicFiniteAutCore result;
-
-  StateToStateMap translMapLhs;
-  StateToStateMap translMapRhs;
-
-  if (pTranslMapLhs == nullptr)
-  { // unused lhs state translation
-    pTranslMapLhs = &translMapLhs;
-  }
-
-  if (pTranslMapRhs == nullptr)
-  { // unused rhs state translation
-    pTranslMapRhs = &translMapRhs;
-  }
-
-  SymbolicFiniteAutCore tempLhs = lhs.ReindexStates("0", 0, pTranslMapLhs);
-  SymbolicFiniteAutCore tempRhs = rhs.ReindexStates("1", 0, pTranslMapRhs);
-
-  result.stateVars_ = tempLhs.stateVars_;
-  result.symbolVars_ = tempLhs.symbolVars_;
-
   SymbolicFiniteAutBDD::UnionApplyFunctor unionFunc;
 
-  result.transitions_->SetBDD(
-    unionFunc(tempLhs.transitions_->GetBDD(), tempRhs.transitions_->GetBDD())
+  // add one distinct bit to both lhs and rhs states,
+  // so they can exist in one BDD next to each other
+  SymbolicFiniteAutCore tempLhs = lhs.ReindexStates("0", true, pTranslMapLhs);
+  SymbolicFiniteAutCore tempRhs = rhs.ReindexStates("1", true, pTranslMapRhs);
+
+  // number of state and symbol variables for tempLhs and tempRhs is the same
+  result.stateVars_  = tempLhs.stateVars_;
+  result.symbolVars_ = tempLhs.symbolVars_;
+
+  // apply union on transitions
+  *(result.transitions_) = SymbolicFiniteAutBDD(
+    unionFunc(
+      tempLhs.transitions_->GetBDD(), tempRhs.transitions_->GetBDD()
+    ),
+    result.stateVars_ + result.symbolVars_ + result.stateVars_
   );
-  result.initialStates_->SetBDD(
+
+  // apply union on initial states
+  *(result.initialStates_) = SymbolicFiniteAutBDD(
     unionFunc(
       tempLhs.initialStates_->GetBDD(), tempRhs.initialStates_->GetBDD()
-    )
+    ),
+    result.stateVars_
   );
-  result.finalStates_->SetBDD(
-    unionFunc(tempLhs.finalStates_->GetBDD(), tempRhs.finalStates_->GetBDD())
+
+  // apply union on final states
+  *(result.finalStates_) = SymbolicFiniteAutBDD(
+    unionFunc(
+      tempLhs.finalStates_->GetBDD(), tempRhs.finalStates_->GetBDD()
+    ),
+    result.stateVars_
   );
 
   return result;

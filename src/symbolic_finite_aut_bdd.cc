@@ -12,25 +12,46 @@
 using VATA::SymbolicFiniteAutBDD;
 
 SymbolicFiniteAutBDD::SymbolicFiniteAutBDD()
-  : mtbdd_(new BDD(false))
-{}
+  : vars_(0),
+    mtbdd_(new BDD(false))
+{
+  this->SetDefaultValue(false);
+}
 
 SymbolicFiniteAutBDD::SymbolicFiniteAutBDD(
   const SymbolicFiniteAutBDD & bdd
-) : mtbdd_(new BDD(*bdd.mtbdd_))
-{}
+) : vars_(bdd.vars_),
+    mtbdd_(new BDD(*bdd.mtbdd_))
+{
+  this->SetDefaultValue(false);
+}
 
 SymbolicFiniteAutBDD::SymbolicFiniteAutBDD(
   SymbolicFiniteAutBDD && bdd
-) : mtbdd_(std::move(bdd.mtbdd_))
+) : vars_(std::move(bdd.vars_)),
+    mtbdd_(std::move(bdd.mtbdd_))
 {
   bdd.mtbdd_ = nullptr;
+
+  this->SetDefaultValue(false);
+}
+
+SymbolicFiniteAutBDD::SymbolicFiniteAutBDD(
+  const BDD &    bdd,
+  const size_t & vars
+) : vars_(vars),
+    mtbdd_(new BDD(bdd))
+{
+  this->SetDefaultValue(false);
 }
 
 SymbolicFiniteAutBDD::SymbolicFiniteAutBDD(
   const SymbolicVarAsgn & asgn
-) : mtbdd_(new BDD(asgn, true, false))
-{}
+) : vars_(asgn.length()),
+    mtbdd_(new BDD(asgn, true, false))
+{
+  this->SetDefaultValue(false);
+}
 
 SymbolicFiniteAutBDD::~SymbolicFiniteAutBDD()
 {}
@@ -43,8 +64,11 @@ SymbolicFiniteAutBDD & SymbolicFiniteAutBDD::operator=(
   { // if two automata differs
     assert(this->mtbdd_ != nullptr);
 
+    this->vars_   = rhs.vars_;
     *this->mtbdd_ = *rhs.mtbdd_;
   }
+
+  this->SetDefaultValue(false);
 
   return *this;
 }
@@ -57,23 +81,83 @@ SymbolicFiniteAutBDD & SymbolicFiniteAutBDD::operator=(
   assert(this->mtbdd_ != nullptr);
   assert(rhs.mtbdd_ != nullptr);
 
+  this->vars_  = std::move(rhs.vars_);
   this->mtbdd_ = std::move(rhs.mtbdd_);
+
+  this->SetDefaultValue(false);
 
   return *this;
 }
 
-SymbolicFiniteAutBDD::BDD SymbolicFiniteAutBDD::GetBDD()
+bool SymbolicFiniteAutBDD::operator==(
+  const SymbolicFiniteAutBDD & rhs
+) const
+{
+  assert(this->mtbdd_ != nullptr);
+  assert(rhs.mtbdd_ != nullptr);
+
+  EquivalenceApplyFunctor equivFunc;
+
+  BDD equivBDD = equivFunc(*(this->mtbdd_), *(rhs.mtbdd_));
+  equivBDD.SetDefaultValue(false);
+  AssignmentList list = equivBDD.GetAllAssignments();
+
+  if (list.size() > 0 && list.front().ToString() == "X" && this->vars_ == rhs.vars_)
+  {
+    return true;
+  }
+
+  else
+  {
+    return false;
+  }
+}
+
+bool SymbolicFiniteAutBDD::operator!=(
+  const SymbolicFiniteAutBDD & rhs
+) const
+{
+  return !(*this == rhs);
+}
+
+size_t SymbolicFiniteAutBDD::GetVars() const
+{
+  return this->vars_;
+}
+
+void SymbolicFiniteAutBDD::SetVars(
+  const size_t & vars
+)
+{
+  this->vars_ = vars;
+}
+
+SymbolicFiniteAutBDD::BDD SymbolicFiniteAutBDD::GetBDD() const
 {
   assert(this->mtbdd_ != nullptr);
 
   return *this->mtbdd_;
 }
 
-void SymbolicFiniteAutBDD::SetBDD(BDD bdd)
+void SymbolicFiniteAutBDD::SetBDD(
+  const BDD & bdd
+)
 {
   assert(this->mtbdd_ != nullptr);
 
   *this->mtbdd_ = bdd;
+}
+
+bool SymbolicFiniteAutBDD::GetDefaultValue() const
+{
+  return this->mtbdd_->GetDefaultValue();
+}
+
+void SymbolicFiniteAutBDD::SetDefaultValue(
+  const bool & defaultValue
+)
+{
+  this->mtbdd_->SetDefaultValue(defaultValue);
 }
 
 void SymbolicFiniteAutBDD::AddAssignment(
@@ -91,12 +175,17 @@ void SymbolicFiniteAutBDD::AddAssignment(
 {
   assert(this->mtbdd_ != nullptr);
 
+  if(this->vars_ < asgn.length())
+  {
+    this->vars_ = asgn.length();
+  }
+
   UnionApplyFunctor unionFunc;
   *this->mtbdd_ = unionFunc(*this->mtbdd_, BDD(asgn, true, false));
+  this->SetDefaultValue(false);
 }
 
 SymbolicFiniteAutBDD::AssignmentList SymbolicFiniteAutBDD::GetAllAssignments(
-  const size_t & vars,
   const bool & concretize
 )
 const
@@ -107,7 +196,7 @@ const
 
   for (AssignmentList::iterator it = list.begin(); it != list.end(); it++)
   { // completes the assignment according to desired length
-    (*it).append(SymbolicVarAsgn(std::string(vars - (*it).length(), 'X')));
+    (*it).append(SymbolicVarAsgn(std::string(this->vars_ - (*it).length(), 'X')));
   }
 
   if (concretize)
@@ -155,7 +244,7 @@ size_t SymbolicFiniteAutBDD::FromSymbolic(
 
     ++i;
   }
-
+  
   return result;
 }
 
@@ -270,15 +359,95 @@ void SymbolicFiniteAutBDD::SplitTransition(
   rstate = str.substr(stateVars + symbolVars, stateVars);
 }
 
+SymbolicFiniteAutBDD SymbolicFiniteAutBDD::AddPrefix(
+  const std::string & str,
+  const BDDSet &      set,
+  StateToStateMap *   pTranslMap
+) const
+{
+  SymbolicFiniteAutBDD result;
+
+  AssignmentList list = this->GetAllAssignments(true);
+
+  for (auto elem : list)
+  {
+    std::string strElem = elem.ToString();
+    std::string elemBefore = strElem.substr(set.first, set.second);
+    strElem.insert(set.first, str);
+    std::string elemAfter = strElem.substr(set.first, set.second + str.size());
+    result.AddAssignment(strElem);
+
+    if (pTranslMap != nullptr)
+    {
+      pTranslMap->insert(
+        std::make_pair(
+          SymbolicFiniteAutBDD::FromSymbolic(elemBefore),
+          SymbolicFiniteAutBDD::FromSymbolic(elemAfter)
+        )
+      );
+    }
+  }
+
+  return result;
+}
+
+SymbolicFiniteAutBDD SymbolicFiniteAutBDD::AddPrefix(
+  const SymbolicVarAsgn & asgn,
+  const BDDSet &          set,
+  StateToStateMap *       pTranslMap
+) const
+{
+  return this->AddPrefix(asgn.ToString(), set, pTranslMap);
+}
+
+SymbolicFiniteAutBDD SymbolicFiniteAutBDD::AddPostfix(
+  const std::string & str,
+  const BDDSet &      set,
+  StateToStateMap *   pTranslMap
+) const
+{
+  SymbolicFiniteAutBDD result;
+
+  AssignmentList list = this->GetAllAssignments(true);
+
+  for (auto elem : list)
+  {
+    std::string strElem = elem.ToString();
+    std::string elemBefore = strElem.substr(set.first, set.second);
+    strElem.insert(set.first + set.second, str);
+    std::string elemAfter = strElem.substr(set.first, set.second + str.size());
+    result.AddAssignment(strElem);
+
+    if (pTranslMap != nullptr)
+    {
+      pTranslMap->insert(
+        std::make_pair(
+          SymbolicFiniteAutBDD::FromSymbolic(elemBefore),
+          SymbolicFiniteAutBDD::FromSymbolic(elemAfter)
+        )
+      );
+    }
+  }
+
+  return result;
+}
+
+SymbolicFiniteAutBDD SymbolicFiniteAutBDD::AddPostfix(
+  const SymbolicVarAsgn & asgn,
+  const BDDSet &          set,
+  StateToStateMap *       pTranslMap
+) const
+{
+  return this->AddPostfix(asgn.ToString(), set, pTranslMap);
+}
+
 SymbolicFiniteAutBDD SymbolicFiniteAutBDD::Exists(
-  const SymbolicFiniteAutBDD & bdd,
-  const size_t & allVars,
   const size_t & vars
 )
 {
   SymbolicFiniteAutBDD result;
 
-  AssignmentList list = bdd.GetAllAssignments(allVars, true);
+  AssignmentList list = this->GetAllAssignments(true);
 
   for (auto elem : list)
   {
@@ -288,17 +457,17 @@ SymbolicFiniteAutBDD SymbolicFiniteAutBDD::Exists(
     result.AddAssignment(str);
   }
 
+  result.vars_ = this->vars_ - vars;
+
   return result;
 }
 
 SymbolicFiniteAutBDD SymbolicFiniteAutBDD::ForAll(
-  const SymbolicFiniteAutBDD & bdd,
-  const size_t & allVars,
   const size_t & vars
 )
 {
   SymbolicFiniteAutBDD result;
-  AssignmentList list = bdd.GetAllAssignments(allVars, true);
+  AssignmentList list = this->GetAllAssignments(true);
   std::set<std::string> allSets, prevSets, lastSet;
 
   for (auto elem : list)
@@ -329,6 +498,8 @@ SymbolicFiniteAutBDD SymbolicFiniteAutBDD::ForAll(
       result.AddAssignment(prevElem);
     }
   }
+
+  result.vars_ = this->vars_ - vars;
 
   return result;
 }

@@ -7,22 +7,24 @@
 #include <vata/util/util.hh>
 
 const char* aut1Str =
-	"Ops           x:0 b:1\n"
+	"Ops           x:0 a:1 b:1\n"
 	"Automaton     aut1\n"
 	"States        p q\n"
 	"Final States  q\n"
 	"Transitions\n"
-	"x     -> p\n"
-	"b(p) -> q\n";
+	"x    -> p\n"
+	"a(p) -> q\n"
+  "b(p) -> p\n";
 
 const char* aut2Str =
-	"Ops           x:0 a:1\n"
+	"Ops           x:0 a:1 b:1\n"
 	"Automaton     aut2\n"
-	"States        p q\n"
-	"Final States  q\n"
+	"States        r s\n"
+	"Final States  s\n"
 	"Transitions\n"
-	"x     -> p\n"
-	"a(p) -> q\n";
+	"x    -> r\n"
+	"a(r) -> s\n"
+  "b(r) -> r\n";
 
 typedef VATA::SymbolicFiniteAut Automaton;
 

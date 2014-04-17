@@ -75,6 +75,81 @@ SymbolicFiniteAutCore & SymbolicFiniteAutCore::operator=(
   return *this;
 }
 
+size_t SymbolicFiniteAutCore::GetStateVars() const
+{
+  return this->stateVars_;
+}
+
+void SymbolicFiniteAutCore::SetStateVars(
+  const size_t & vars
+)
+{
+  this->stateVars_ = vars;
+}
+
+size_t SymbolicFiniteAutCore::GetSymbolVars() const
+{
+  return this->symbolVars_;
+}
+
+void SymbolicFiniteAutCore::SetSymbolVars(
+  const size_t & vars
+)
+{
+  this->symbolVars_ = vars;
+}
+
+SymbolicFiniteAutCore::TransitionsBDD SymbolicFiniteAutCore::GetTransitions(
+) const
+{
+  assert(this->transitions_ != nullptr);
+
+  return *(this->transitions_);
+}
+
+void SymbolicFiniteAutCore::SetTransitions(
+  const TransitionsBDD & transitions
+)
+{
+  assert(this->transitions_ != nullptr);
+
+  *(this->transitions_) = transitions;
+}
+
+SymbolicFiniteAutCore::InitialStatesBDD SymbolicFiniteAutCore::GetInitialStates(
+) const
+{
+  assert(this->initialStates_ != nullptr);
+
+  return *(this->initialStates_);
+}
+
+void SymbolicFiniteAutCore::SetInitialStates(
+  const InitialStatesBDD & initialStates
+)
+{
+  assert(this->initialStates_ != nullptr);
+
+  *(this->initialStates_) = initialStates;
+}
+
+SymbolicFiniteAutCore::FinalStatesBDD SymbolicFiniteAutCore::GetFinalStates(
+) const
+{
+  assert(this->finalStates_ != nullptr);
+
+  return *(this->finalStates_);
+}
+
+void SymbolicFiniteAutCore::SetFinalStates(
+  const FinalStatesBDD & finalStates
+)
+{
+  assert(this->finalStates_ != nullptr);
+
+  *(this->finalStates_) = finalStates;
+}
+
 void SymbolicFiniteAutCore::LoadFromAutDescSymbolic(
   const AutDescription & desc
 )
@@ -170,15 +245,9 @@ DumpToAutDescSymbolic() const
   assert(this->initialStates_ != nullptr);
   assert(this->finalStates_   != nullptr);
 
-  AssignmentList transitionList = transitions_->GetAllAssignments(
-    this->stateVars_ + this->symbolVars_ + this->stateVars_
-  );
-  AssignmentList initialStateList = initialStates_->GetAllAssignments(
-    this->stateVars_
-  );
-  AssignmentList finalStatesList = finalStates_->GetAllAssignments(
-    this->stateVars_
-  );
+  AssignmentList transitionList = transitions_->GetAllAssignments();
+  AssignmentList initialStateList = initialStates_->GetAllAssignments();
+  AssignmentList finalStatesList = finalStates_->GetAllAssignments();
 
   AutDescription desc;
 
@@ -319,20 +388,9 @@ void SymbolicFiniteAutCore::AddFinalState(
 }
 
 SymbolicFiniteAutCore SymbolicFiniteAutCore::ReindexStates(
-  const std::string & str,
-  const size_t & pos,
-  StateToStateMap *   pTranslMap
-) const
-{
-  SymbolicVarAsgn asgn(str);
-
-  return this->ReindexStates(asgn, pos, pTranslMap);
-}
-
-SymbolicFiniteAutCore SymbolicFiniteAutCore::ReindexStates(
-  const SymbolicVarAsgn & asgn,
-  const size_t & pos,
-  StateToStateMap *   pTranslMap
+  const std::string &     str,
+  const bool &            isPrefix,
+  StateToStateMap *       pTranslMap
 ) const
 {
   assert(this->transitions_ != nullptr);
@@ -340,93 +398,76 @@ SymbolicFiniteAutCore SymbolicFiniteAutCore::ReindexStates(
   assert(this->finalStates_ != nullptr);
 
   SymbolicFiniteAutCore result;
-  StateToStateMap translMap;
 
-  if (pTranslMap == nullptr)
-  { // unused state translation
-    pTranslMap = &translMap;
-  }
-
-  AssignmentList transitionsList = this->transitions_->GetAllAssignments(
-    this->stateVars_ + this->symbolVars_ + this->stateVars_
-  );
-  AssignmentList initialStatesList = this->initialStates_->GetAllAssignments(
-    this->stateVars_
-  );
-  AssignmentList finalStatesList = this->finalStates_->GetAllAssignments(
-    this->stateVars_
-  );
-
-  std::string strAsgn = asgn.ToString();
-
-  for (auto transition : transitionsList)
-  {
-    std::string lstate, symbol, rstate;
-
-    SymbolicFiniteAutBDD::SplitTransition(
-      transition,
-      this->stateVars_,
-      this->symbolVars_,
-      lstate,
-      symbol,
-      rstate
-    );
-
-    std::string newLstate = lstate;
-    newLstate.insert(pos, strAsgn);
-    std::string newRstate = rstate;
-    newRstate.insert(pos, strAsgn);
-    std::string newTransition = newLstate + symbol + newRstate;
-
-    pTranslMap->insert(
-      std::make_pair(
-        SymbolicFiniteAutBDD::FromSymbolic(lstate),
-        SymbolicFiniteAutBDD::FromSymbolic(newLstate)
-      )
-    );
-
-    pTranslMap->insert(
-      std::make_pair(
-        SymbolicFiniteAutBDD::FromSymbolic(rstate),
-        SymbolicFiniteAutBDD::FromSymbolic(newRstate)
-      )
-    );
-
-    result.transitions_->AddAssignment(newTransition);
-  }
-
-  for (auto initialState : initialStatesList)
-  {
-    std::string newInitialState = initialState.ToString();
-    newInitialState.insert(pos, strAsgn);
-
-    pTranslMap->insert(
-      std::make_pair(
-        SymbolicFiniteAutBDD::FromSymbolic(initialState),
-        SymbolicFiniteAutBDD::FromSymbolic(newInitialState)
-      )
-    );
-
-    result.initialStates_->AddAssignment(newInitialState);
-  }
-
-  for (auto finalState : finalStatesList)
-  {
-    std::string newFinalState = finalState.ToString();
-    newFinalState.insert(pos, strAsgn);
-
-    pTranslMap->insert(
-      std::make_pair(
-        SymbolicFiniteAutBDD::FromSymbolic(finalState),
-        SymbolicFiniteAutBDD::FromSymbolic(newFinalState)
-      )
-    );
-
-    result.finalStates_->AddAssignment(newFinalState);
-  }
-
-  result.stateVars_ = this->stateVars_ + strAsgn.size();
+  result.stateVars_ = this->stateVars_ + str.size();
   result.symbolVars_ = this->symbolVars_;
 
+  if (isPrefix)
+  {
+    *(result.transitions_) = this->transitions_->AddPrefix(
+      str,
+      std::make_pair(0, this->stateVars_),
+      pTranslMap
+    );
+
+    *(result.transitions_) = result.transitions_->AddPrefix(
+      str,
+      std::make_pair(result.stateVars_ + this->symbolVars_, this->stateVars_),
+      pTranslMap
+    );
+
+    *(result.initialStates_) = this->initialStates_->AddPrefix(
+      str,
+      std::make_pair(0, this->stateVars_),
+      pTranslMap
+    );
+
+    *(result.finalStates_) = this->finalStates_->AddPrefix(
+      str,
+      std::make_pair(0, this->stateVars_),
+      pTranslMap
+    );
+  }
+  
+  else
+  {
+    *(result.transitions_) = this->transitions_->AddPostfix(
+      str,
+      std::make_pair(0, this->stateVars_),
+      pTranslMap
+    );
+
+    *(result.transitions_) = result.transitions_->AddPostfix(
+      str,
+      std::make_pair(result.stateVars_ + this->symbolVars_, this->stateVars_),
+      pTranslMap
+    );
+
+    *(result.initialStates_) = this->initialStates_->AddPostfix(
+      str,
+      std::make_pair(0, this->stateVars_),
+      pTranslMap
+    );
+
+    *(result.finalStates_) = this->finalStates_->AddPostfix(
+      str,
+      std::make_pair(0, this->stateVars_),
+      pTranslMap
+    );
+  }
+
   return result;
+}
+
+SymbolicFiniteAutCore SymbolicFiniteAutCore::ReindexStates(
+  const SymbolicVarAsgn & asgn,
+  const bool &            isPrefix,
+  StateToStateMap *       pTranslMap
+) const
+{
+  return this->ReindexStates(
+    asgn.ToString(),
+    isPrefix,
+    pTranslMap
+  );
 }

@@ -34,10 +34,10 @@ public: // public data types
   using AutDescription = VATA::SymbolicFiniteAut::AutDescription;
 
   /// @brief  Symbolic assignment
-  using SymbolicVarAsgn = VATA::SymbolicFiniteAut::SymbolicVarAsgn;
+  using SymbolicVarAsgn = VATA::SymbolicFiniteAutBDD::SymbolicVarAsgn;
 
   /// @brief  List of symbolic assignments
-  using AssignmentList = VATA::SymbolicFiniteAut::AssignmentList;
+  using AssignmentList = VATA::SymbolicFiniteAutBDD::AssignmentList;
 
   /**
    * @brief  Bidirectional dictionary translating between string
@@ -189,6 +189,88 @@ public: // instantiation
     SymbolicFiniteAutCore && rhs
   );
 
+public: // getters and setters
+
+  /**
+   * @brief  Getter of number of variables representing state
+   *
+   * @return  Number of variables representing state
+   */
+  size_t GetStateVars() const;
+
+  /**
+   * @brief  Setter of number of variables representing state
+   *
+   * @param[in]  vars  Assigned number of variables representing state
+   */
+  void SetStateVars(
+    const size_t & vars
+  );
+
+  /**
+   * @brief  Getter of number of variables representing symbol
+   *
+   * @return  Number of variables representing symbol
+   */
+  size_t GetSymbolVars() const;
+
+  /**
+   * @brief  Setter of number of variables representing symbol
+   *
+   * @param[in]  vars  Assigned number of variables representing symbol
+   */
+  void SetSymbolVars(
+    const size_t & vars
+  );
+
+  /**
+   * @brief  Getter of transitions
+   *
+   * @return  Transitions
+   */
+  TransitionsBDD GetTransitions() const;
+
+  /**
+   * @brief  Setter of transitions
+   *
+   * @param[in]  transitions  Assigned transitions
+   */
+  void SetTransitions(
+    const TransitionsBDD & transitions
+  );
+
+  /**
+   * @brief  Getter of initial states
+   *
+   * @return  Initial states
+   */
+  InitialStatesBDD GetInitialStates() const;
+
+  /**
+   * @brief  Setter of initial states
+   *
+   * @param[in]  initialStates  Assigned initial states
+   */
+  void SetInitialStates(
+    const InitialStatesBDD & initialStates
+  );
+
+  /**
+   * @brief  Getter of final states
+   *
+   * @return  Final states
+   */
+  FinalStatesBDD GetFinalStates() const;
+
+  /**
+   * @brief  Setter of final states
+   *
+   * @param[in]  finalStates  Assigned final states
+   */
+  void SetFinalStates(
+    const FinalStatesBDD & finalStates
+  );
+
 public: // public methods
 
   /**
@@ -315,18 +397,9 @@ public: // public methods
     assert(initialStates_ != nullptr);
     assert(finalStates_   != nullptr);
 
-    AssignmentList transitionList   = transitions_->GetAllAssignments(
-      stateVars_ + symbolVars_ + stateVars_,
-      true
-    );
-    AssignmentList initialStateList = initialStates_->GetAllAssignments(
-      stateVars_,
-      true
-    );
-    AssignmentList finalStatesList  = finalStates_->GetAllAssignments(
-      stateVars_,
-      true
-    );
+    AssignmentList transitionList   = transitions_->GetAllAssignments(true);
+    AssignmentList initialStateList = initialStates_->GetAllAssignments(true);
+    AssignmentList finalStatesList  = finalStates_->GetAllAssignments(true);
 
     AutDescription desc;
 
@@ -422,29 +495,33 @@ public: // public methods
   );
 
   /**
-   * @brief  Inserts a prefix to all states in BDDs
+   * @brief  Reindexing all states
    *
-   * @param  str         Prefix to be inserted
-   * @param  pos         Position of insertion
-   * @param  pTranslMap  Translation map of states
+   * @param  str         String prefix
+   * @param  isPrefix    Prefix if true, postfix if false
+   * @param  pTranslMap  Translation map of assignments
+   *
+   * @return  Automaton core with reindexed states
    */
   SymbolicFiniteAutCore ReindexStates(
-    const std::string & str,
-    const size_t & pos,
-    StateToStateMap *   pTranslMap = nullptr
+    const std::string &     str,
+    const bool &            isPrefix,
+    StateToStateMap *       pTranslMap = nullptr
   ) const;
 
   /**
-   * @brief  Inserts a prefix to all states in BDDs
+   * @brief  Reindexing all states
    *
-   * @param  asgn        Prefix to be inserted
-   * @param  pos         Position of insertion
-   * @param  pTranslMap  Translation map of states
+   * @param  asgn        Symbolic prefix
+   * @param  isPrefix    Prefix if true, postfix if false
+   * @param  pTranslMap  Translation map of assignments
+   *
+   * @return  Automaton core with reindexed states
    */
   SymbolicFiniteAutCore ReindexStates(
     const SymbolicVarAsgn & asgn,
-    const size_t & pos,
-    StateToStateMap *   pTranslMap = nullptr
+    const bool &            isPrefix,
+    StateToStateMap *       pTranslMap = nullptr
   ) const;
 
   /**
@@ -489,11 +566,14 @@ public: // public methods
    * @brief  Compute a simulation on states
    *
    * @param  aut  Given automaton
+   * @param  stateDict  Bidirectional dictionary translating between string
+                        and internal representation of a state
    *
    * return  String describing states in simulation relation
    */
 	static std::string ComputeSimulation(
-  	const SymbolicFiniteAutCore & aut
+  	const SymbolicFiniteAutCore & aut,
+    StateDict *                   stateDict = nullptr
   );
 
   /**
@@ -505,6 +585,19 @@ public: // public methods
    */
   static SymbolicFiniteAutBDD ComputeInitialRelation(
     const SymbolicFiniteAutCore & aut
+  );
+
+  /**
+   * @brief  Compute a relation with next index
+   *
+   * @param  aut        Given automaton
+   * @param  prevIndex  Relation with index i-1
+   *
+   * return  BDD of relation with index i
+   */
+  static SymbolicFiniteAutBDD ComputeNextIndex(
+    const SymbolicFiniteAutCore & aut,
+    const SymbolicFiniteAutBDD &  prevIndex
   );
 };
 

@@ -477,11 +477,14 @@ public: // public methods
    * @brief  Compute a simulation on states
    *
    * @param  aut  Given automaton
+   * @param  stateDict  Bidirectional dictionary translating between string
+                        and internal representation of a state
    *
    * return  String describing states in simulation relation
    */
 	static std::string ComputeSimulation(
-  	const SymbolicFiniteAut & aut
+  	const SymbolicFiniteAut & aut,
+    StateDict *               stateDict = nullptr
   );
 };
 

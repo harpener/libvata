@@ -424,6 +424,11 @@ public:   // public methods
 		return defaultValue_;
 	}
 
+	void SetDefaultValue(const DataType& defaultValue)
+	{
+		defaultValue_ = defaultValue;
+	}
+
 	OndriksMTBDD ExtendWith(
 		const SymbolicVarAsgn&         asgn,
 		const size_t&                  offset) const

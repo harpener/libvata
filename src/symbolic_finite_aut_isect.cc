@@ -18,127 +18,138 @@ SymbolicFiniteAutCore SymbolicFiniteAutCore::Intersection(
 )
 {
   SymbolicFiniteAutCore result;
+  SymbolicFiniteAutBDD::IntersectionApplyFunctor isectFunc;
 
-  ProductTranslMap translMap;
+  // add such postfix to lhs states and such prefix to rhs states,
+  // so they overlap each other for cartesian product
+  SymbolicFiniteAutCore tempLhs = lhs.ReindexStates(
+    std::string(rhs.stateVars_, 'X'),
+    false
+  );
 
-  if (pTranslMap == nullptr)
-  { // unused state translation
-    pTranslMap = &translMap;
-  }
+  SymbolicFiniteAutCore tempRhs = rhs.ReindexStates(
+    std::string(lhs.stateVars_, 'X'),
+    true
+  );
 
-  std::string lhsSpace(lhs.stateVars_, 'X');
-  std::string rhsSpace(rhs.stateVars_, 'X');
-
-  SymbolicFiniteAutCore tempLhs = lhs.ReindexStates(rhsSpace, lhs.stateVars_);
-  SymbolicFiniteAutCore tempRhs = rhs.ReindexStates(lhsSpace, 0);
-
+  // number of state and symbol variables for tempLhs and tempRhs is the same
   result.stateVars_ = tempLhs.stateVars_;
   result.symbolVars_ = tempLhs.symbolVars_;
 
-  SymbolicFiniteAutBDD::IntersectApplyFunctor isectFunc;
-
-  result.transitions_->SetBDD(
-    isectFunc(tempLhs.transitions_->GetBDD(), tempRhs.transitions_->GetBDD())
-  );
-  result.initialStates_->SetBDD(
+  // apply intersection on transitions
+  *(result.transitions_) = SymbolicFiniteAutBDD(
     isectFunc(
-      tempLhs.initialStates_->GetBDD(), tempRhs.initialStates_->GetBDD()
-    )
-  );
-  result.finalStates_->SetBDD(
-    isectFunc(tempLhs.finalStates_->GetBDD(), tempRhs.finalStates_->GetBDD())
-  );
-
-  // intersection state translation after the operation
-
-  AssignmentList transitionsList = result.transitions_->GetAllAssignments(
+       tempLhs.transitions_->GetBDD(), tempRhs.transitions_->GetBDD()
+    ),
     result.stateVars_ + result.symbolVars_ + result.stateVars_
   );
-  AssignmentList initialStatesList = result.initialStates_->GetAllAssignments(
+
+  // apply intersection on initial states
+  *(result.initialStates_) = SymbolicFiniteAutBDD(
+    isectFunc(
+       tempLhs.initialStates_->GetBDD(), tempRhs.initialStates_->GetBDD()
+    ),
     result.stateVars_
   );
-  AssignmentList finalStatesList = result.finalStates_->GetAllAssignments(
+
+  // apply intersection on final states
+  *(result.finalStates_) = SymbolicFiniteAutBDD(
+    isectFunc(
+       tempLhs.finalStates_->GetBDD(), tempRhs.finalStates_->GetBDD()
+    ),
     result.stateVars_
   );
 
-  for (auto transition : transitionsList)
+  // state translation follows after the operation,
+  // it can be predicted, but then it would have redundant translations
+  if (pTranslMap != nullptr)
   {
-    std::string lstate, symbol, rstate;
+    AssignmentList transitionsList =
+    result.transitions_->GetAllAssignments(true);
+    AssignmentList initialStatesList =
+    result.initialStates_->GetAllAssignments(true);
+    AssignmentList finalStatesList =
+    result.finalStates_->GetAllAssignments(true);
 
-    SymbolicFiniteAutBDD::SplitTransition(
-      transition,
-      result.stateVars_,
-      result.symbolVars_,
-      lstate,
-      symbol,
-      rstate
-    );
+    for (auto transition : transitionsList)
+    {
+      std::string lstate, symbol, rstate;
 
-    pTranslMap->insert(
-      std::make_pair(
+      SymbolicFiniteAutBDD::SplitTransition(
+        transition,
+        result.stateVars_,
+        result.symbolVars_,
+        lstate,
+        symbol,
+        rstate
+      );
+
+      pTranslMap->insert(
         std::make_pair(
-          SymbolicFiniteAutBDD::FromSymbolic(
-            lstate.substr(0, lhs.stateVars_)
+          std::make_pair(
+            SymbolicFiniteAutBDD::FromSymbolic(
+              lstate.substr(0, lhs.stateVars_)
+            ),
+            SymbolicFiniteAutBDD::FromSymbolic(
+              lstate.substr(lhs.stateVars_, rhs.stateVars_)
+            )
           ),
-          SymbolicFiniteAutBDD::FromSymbolic(
-            lstate.substr(lhs.stateVars_, rhs.stateVars_)
-          )
-        ),
-        SymbolicFiniteAutBDD::FromSymbolic(lstate)
-      )
-    );
+          SymbolicFiniteAutBDD::FromSymbolic(lstate)
+        )
+      );
 
-    pTranslMap->insert(
-      std::make_pair(
+      pTranslMap->insert(
         std::make_pair(
-          SymbolicFiniteAutBDD::FromSymbolic(
-            rstate.substr(0, lhs.stateVars_)
+          std::make_pair(
+            SymbolicFiniteAutBDD::FromSymbolic(
+              rstate.substr(0, lhs.stateVars_)
+            ),
+            SymbolicFiniteAutBDD::FromSymbolic(
+              rstate.substr(lhs.stateVars_, rhs.stateVars_)
+            )
           ),
-          SymbolicFiniteAutBDD::FromSymbolic(
-            rstate.substr(lhs.stateVars_, rhs.stateVars_)
-          )
-        ),
-        SymbolicFiniteAutBDD::FromSymbolic(rstate)
-      )
-    );
-  }
+          SymbolicFiniteAutBDD::FromSymbolic(rstate)
+        )
+      );
+    }
 
-  for (auto initialState : initialStatesList)
-  {
-    std::string state = initialState.ToString();
+    for (auto initialState : initialStatesList)
+    {
+      std::string state = initialState.ToString();
 
-    pTranslMap->insert(
-      std::make_pair(
+      pTranslMap->insert(
         std::make_pair(
-          SymbolicFiniteAutBDD::FromSymbolic(
-            state.substr(0, lhs.stateVars_)
+          std::make_pair(
+            SymbolicFiniteAutBDD::FromSymbolic(
+              state.substr(0, lhs.stateVars_)
+            ),
+            SymbolicFiniteAutBDD::FromSymbolic(
+              state.substr(lhs.stateVars_, rhs.stateVars_)
+            )
           ),
-          SymbolicFiniteAutBDD::FromSymbolic(
-            state.substr(lhs.stateVars_, rhs.stateVars_)
-          )
-        ),
-        SymbolicFiniteAutBDD::FromSymbolic(state)
-      )
-    );
-  }
+          SymbolicFiniteAutBDD::FromSymbolic(state)
+        )
+      );
+    }
 
-  for (auto finalState : finalStatesList)
-  {
-    std::string state = finalState.ToString();
+    for (auto finalState : finalStatesList)
+    {
+      std::string state = finalState.ToString();
 
-    pTranslMap->insert(
-      std::make_pair(
+      pTranslMap->insert(
         std::make_pair(
-          SymbolicFiniteAutBDD::FromSymbolic(
-            state.substr(0, lhs.stateVars_)
+          std::make_pair(
+            SymbolicFiniteAutBDD::FromSymbolic(
+              state.substr(0, lhs.stateVars_)
+            ),
+            SymbolicFiniteAutBDD::FromSymbolic(
+              state.substr(lhs.stateVars_, rhs.stateVars_)
+            )
           ),
-          SymbolicFiniteAutBDD::FromSymbolic(
-            state.substr(lhs.stateVars_, rhs.stateVars_)
-          )
-        ),
-        SymbolicFiniteAutBDD::FromSymbolic(state)
-      )
-    );
+          SymbolicFiniteAutBDD::FromSymbolic(state)
+        )
+      );
+    }
   }
 
   return result;

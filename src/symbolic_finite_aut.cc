@@ -353,10 +353,11 @@ SymbolicFiniteAut SymbolicFiniteAut::Intersection(
 }
 
 std::string SymbolicFiniteAut::ComputeSimulation(
-  const SymbolicFiniteAut & aut
+  const SymbolicFiniteAut & aut,
+  StateDict *               stateDict
 )
 {
   assert(aut.core_ != nullptr);
 
-  return Core::ComputeSimulation(*aut.core_);
+  return Core::ComputeSimulation(*aut.core_, stateDict);
 }
