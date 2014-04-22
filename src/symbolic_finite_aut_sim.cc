@@ -17,8 +17,10 @@ ComputeInitialRelation(
 )
 {
   SymbolicFiniteAutBDD result, temp, lhs, rhs;
-  SymbolicFiniteAutBDD::ConsequenceApplyFunctor conseqFunc;
+  SymbolicFiniteAutBDD::UnionApplyFunctor unionFunc;
   SymbolicFiniteAutBDD::IntersectionApplyFunctor isectFunc;
+  SymbolicFiniteAutBDD::ConsequenceApplyFunctor conseqFunc;
+  
 
   // for a pair "q1" in Q1 and "a" in Sigma there exists such "q2" in Q2
   // that the triple "q1", "a" and "q2" are in Delta
@@ -84,6 +86,42 @@ ComputeInitialRelation(
   // apply previous statement on simulation relation
   result = SymbolicFiniteAutBDD(
     isectFunc(temp.GetBDD(), result.GetBDD()),
+    aut.stateVars_ + aut.stateVars_
+  );
+
+  // if there are no transitions then cartesian product of final states is valid
+  temp = SymbolicFiniteAutBDD(
+    isectFunc(lhs.GetBDD(), rhs.GetBDD()),
+    aut.stateVars_ + aut.stateVars_
+  );
+
+  // apply previous statement on simulation relation
+  result = SymbolicFiniteAutBDD(
+    unionFunc(temp.GetBDD(), result.GetBDD()),
+    aut.stateVars_ + aut.stateVars_
+  );
+
+  // reindex I so it can overlap
+  lhs = aut.initialStates_->AddPostfix(
+    std::string(aut.stateVars_, 'X'),
+    std::make_pair(0, aut.stateVars_)
+  );
+
+  // reindex I so it can overlap
+  rhs = aut.initialStates_->AddPrefix(
+    std::string(aut.stateVars_, 'X'),
+    std::make_pair(0, aut.stateVars_)
+  );
+
+  // if there are no transitions then cartesian product of initial states is valid
+  temp = SymbolicFiniteAutBDD(
+    isectFunc(lhs.GetBDD(), rhs.GetBDD()),
+    aut.stateVars_ + aut.stateVars_
+  );
+
+  // apply previous statement on simulation relation
+  result = SymbolicFiniteAutBDD(
+    unionFunc(temp.GetBDD(), result.GetBDD()),
     aut.stateVars_ + aut.stateVars_
   );
 
@@ -186,11 +224,42 @@ std::string SymbolicFiniteAutCore::ComputeSimulation(
   StateDict *                   stateDict
 )
 {
+  std::string result;
   SymbolicFiniteAutBDD prevIndexRelation, nextIndexRelation;
 
   // compute inital simulation relation
   prevIndexRelation = ComputeInitialRelation(aut);
+  // states are translated to string representation
+  if (stateDict != nullptr)
+  {
+    AssignmentList list = prevIndexRelation.GetAllAssignments(true);
+    StateBackTranslStrict StateBackTranslFunc(stateDict->GetReverseMap());
 
+    for (auto elem : list)
+    {
+      std::string str = elem.ToString();
+      std::string str1 = str.substr(0 , aut.stateVars_);
+      std::string str2 = str.substr(aut.stateVars_, aut.stateVars_);
+      result += StateBackTranslFunc(SymbolicFiniteAutBDD::FromSymbolic(str1));
+      result += " <= ";
+      result += StateBackTranslFunc(SymbolicFiniteAutBDD::FromSymbolic(str2));
+      result += "\n";
+    }
+  }
+
+  // symbolic representation of states
+  else
+  {
+    AssignmentList list = prevIndexRelation.GetAllAssignments();
+
+    for (auto elem : list)
+    {
+      std::string str = elem.ToString();
+      std::string str1 = str.substr(0 , aut.stateVars_);
+      std::string str2 = str.substr(aut.stateVars_, aut.stateVars_);
+      result += str1 + " <= " + str2 + "\n";
+    }
+  } result += "\n";
   // compute simulation relation with next index
   nextIndexRelation = ComputeNextIndex(aut, prevIndexRelation);
 
@@ -198,10 +267,6 @@ std::string SymbolicFiniteAutCore::ComputeSimulation(
   while(prevIndexRelation != nextIndexRelation)
   {
     prevIndexRelation = nextIndexRelation;
-    nextIndexRelation = ComputeNextIndex(aut, prevIndexRelation);
-  }
-
-  std::string result = "Simulation relation:\n";
 
   // states are translated to string representation
   if (stateDict != nullptr)
@@ -215,7 +280,7 @@ std::string SymbolicFiniteAutCore::ComputeSimulation(
       std::string str1 = str.substr(0 , aut.stateVars_);
       std::string str2 = str.substr(aut.stateVars_, aut.stateVars_);
       result += StateBackTranslFunc(SymbolicFiniteAutBDD::FromSymbolic(str1));
-      result += " is simulated by ";
+      result += " <= ";
       result += StateBackTranslFunc(SymbolicFiniteAutBDD::FromSymbolic(str2));
       result += "\n";
     }
@@ -231,7 +296,42 @@ std::string SymbolicFiniteAutCore::ComputeSimulation(
       std::string str = elem.ToString();
       std::string str1 = str.substr(0 , aut.stateVars_);
       std::string str2 = str.substr(aut.stateVars_, aut.stateVars_);
-      result += str1 + " is simulated by " + str2 + "\n";
+      result += str1 + " <= " + str2 + "\n";
+    }
+  } result += "\n";
+
+    nextIndexRelation = ComputeNextIndex(aut, prevIndexRelation);
+  }
+
+  // states are translated to string representation
+  if (stateDict != nullptr)
+  {
+    AssignmentList list = nextIndexRelation.GetAllAssignments(true);
+    StateBackTranslStrict StateBackTranslFunc(stateDict->GetReverseMap());
+
+    for (auto elem : list)
+    {
+      std::string str = elem.ToString();
+      std::string str1 = str.substr(0 , aut.stateVars_);
+      std::string str2 = str.substr(aut.stateVars_, aut.stateVars_);
+      result += StateBackTranslFunc(SymbolicFiniteAutBDD::FromSymbolic(str1));
+      result += " <= ";
+      result += StateBackTranslFunc(SymbolicFiniteAutBDD::FromSymbolic(str2));
+      result += "\n";
+    }
+  }
+
+  // symbolic representation of states
+  else
+  {
+    AssignmentList list = nextIndexRelation.GetAllAssignments();
+
+    for (auto elem : list)
+    {
+      std::string str = elem.ToString();
+      std::string str1 = str.substr(0 , aut.stateVars_);
+      std::string str2 = str.substr(aut.stateVars_, aut.stateVars_);
+      result += str1 + " <= " + str2 + "\n";
     }
   }
 

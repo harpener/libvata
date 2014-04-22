@@ -59,7 +59,7 @@ int main()
 	aut1.LoadFromString(*parser, aut1Str, stateTransl1, symbolTransl, "explicit");
   aut2.LoadFromString(*parser, aut2Str, stateTransl2, symbolTransl, "explicit");
 
-  // execute union operation
+  // execute intersection operation
   Automaton::ProductTranslMap stateTranslMap;
   Automaton result = Automaton::Intersection(
     aut1,

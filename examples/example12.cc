@@ -39,7 +39,7 @@ int main()
 	aut1.LoadFromString(*parser, aut1Str, "symbolic");
   aut2.LoadFromString(*parser, aut2Str, "symbolic");
 
-  // execute union operation
+  // execute intersection operation
   Automaton result = Automaton::Intersection(
     aut1,
     aut2
