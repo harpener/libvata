@@ -229,37 +229,7 @@ std::string SymbolicFiniteAutCore::ComputeSimulation(
 
   // compute inital simulation relation
   prevIndexRelation = ComputeInitialRelation(aut);
-  // states are translated to string representation
-  if (stateDict != nullptr)
-  {
-    AssignmentList list = prevIndexRelation.GetAllAssignments(true);
-    StateBackTranslStrict StateBackTranslFunc(stateDict->GetReverseMap());
 
-    for (auto elem : list)
-    {
-      std::string str = elem.ToString();
-      std::string str1 = str.substr(0 , aut.stateVars_);
-      std::string str2 = str.substr(aut.stateVars_, aut.stateVars_);
-      result += StateBackTranslFunc(SymbolicFiniteAutBDD::FromSymbolic(str1));
-      result += " <= ";
-      result += StateBackTranslFunc(SymbolicFiniteAutBDD::FromSymbolic(str2));
-      result += "\n";
-    }
-  }
-
-  // symbolic representation of states
-  else
-  {
-    AssignmentList list = prevIndexRelation.GetAllAssignments();
-
-    for (auto elem : list)
-    {
-      std::string str = elem.ToString();
-      std::string str1 = str.substr(0 , aut.stateVars_);
-      std::string str2 = str.substr(aut.stateVars_, aut.stateVars_);
-      result += str1 + " <= " + str2 + "\n";
-    }
-  } result += "\n";
   // compute simulation relation with next index
   nextIndexRelation = ComputeNextIndex(aut, prevIndexRelation);
 
@@ -267,39 +237,6 @@ std::string SymbolicFiniteAutCore::ComputeSimulation(
   while(prevIndexRelation != nextIndexRelation)
   {
     prevIndexRelation = nextIndexRelation;
-
-  // states are translated to string representation
-  if (stateDict != nullptr)
-  {
-    AssignmentList list = nextIndexRelation.GetAllAssignments(true);
-    StateBackTranslStrict StateBackTranslFunc(stateDict->GetReverseMap());
-
-    for (auto elem : list)
-    {
-      std::string str = elem.ToString();
-      std::string str1 = str.substr(0 , aut.stateVars_);
-      std::string str2 = str.substr(aut.stateVars_, aut.stateVars_);
-      result += StateBackTranslFunc(SymbolicFiniteAutBDD::FromSymbolic(str1));
-      result += " <= ";
-      result += StateBackTranslFunc(SymbolicFiniteAutBDD::FromSymbolic(str2));
-      result += "\n";
-    }
-  }
-
-  // symbolic representation of states
-  else
-  {
-    AssignmentList list = nextIndexRelation.GetAllAssignments();
-
-    for (auto elem : list)
-    {
-      std::string str = elem.ToString();
-      std::string str1 = str.substr(0 , aut.stateVars_);
-      std::string str2 = str.substr(aut.stateVars_, aut.stateVars_);
-      result += str1 + " <= " + str2 + "\n";
-    }
-  } result += "\n";
-
     nextIndexRelation = ComputeNextIndex(aut, prevIndexRelation);
   }
 
