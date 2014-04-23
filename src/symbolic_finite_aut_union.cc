@@ -21,6 +21,7 @@ SymbolicFiniteAutCore SymbolicFiniteAutCore::Union(
   SymbolicFiniteAutCore result;
   SymbolicFiniteAutBDD::UnionApplyFunctor unionFunc;
 
+  // TODO: optimize
   // add one distinct bit to both lhs and rhs states,
   // so they can exist in one BDD next to each other
   SymbolicFiniteAutCore tempLhs = lhs.ReindexStates("0", true, pTranslMapLhs);

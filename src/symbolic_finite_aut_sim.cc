@@ -21,16 +21,19 @@ ComputeInitialRelation(
   SymbolicFiniteAutBDD::IntersectionApplyFunctor isectFunc;
   SymbolicFiniteAutBDD::ConsequenceApplyFunctor conseqFunc;
 
+  // TODO: optimize
   // for a pair "q1" in Q1 and "a" in Sigma there exists such "q2" in Q2
   // that the triple "q1", "a" and "q2" are in Delta
   result = aut.transitions_->Exists(aut.stateVars_);
 
+  // TODO: optimize
   // reindex Q1 so it can overlap
   lhs = result.AddPostfix(
     std::string(aut.stateVars_, 'X'),
     std::make_pair(0, aut.stateVars_)
   );
 
+  // TODO: optimize
   // reindex Q1 so it can overlap
   rhs = result.AddPrefix(
     std::string(aut.stateVars_, 'X'),
@@ -44,15 +47,18 @@ ComputeInitialRelation(
     aut.stateVars_ + aut.stateVars_ + aut.symbolVars_
   );
 
+  // TODO: optimize
   // previous statement applies to all "a" in Sigma
   result = result.ForAll(aut.symbolVars_);
 
+  // TODO: optimize
   // reindex F so it can overlap
   lhs = aut.finalStates_->AddPostfix(
     std::string(aut.stateVars_, 'X'),
     std::make_pair(0, aut.stateVars_)
   );
 
+  // TODO: optimize
   // reindex F so it can overlap
   rhs = aut.finalStates_->AddPrefix(
     std::string(aut.stateVars_, 'X'),
@@ -83,12 +89,14 @@ ComputeInitialRelation(
     aut.stateVars_ + aut.stateVars_
   );
 
+  // TODO: optimize
   // reindex I so it can overlap
   lhs = aut.initialStates_->AddPostfix(
     std::string(aut.stateVars_, 'X'),
     std::make_pair(0, aut.stateVars_)
   );
 
+  // TODO: optimize
   // reindex I so it can overlap
   rhs = aut.initialStates_->AddPrefix(
     std::string(aut.stateVars_, 'X'),
@@ -120,12 +128,14 @@ ComputeNextIndex(
   SymbolicFiniteAutBDD::ConsequenceApplyFunctor conseqFunc;
   SymbolicFiniteAutBDD::IntersectionApplyFunctor isectFunc;
 
+  // TODO: optimize
   // reindex Q2 so it can overlap
   lhs = aut.transitions_->AddPostfix(
     std::string(aut.stateVars_, 'X'),
     std::make_pair(aut.stateVars_, aut.symbolVars_)
   );
 
+  // TODO: optimize
   // reindex Q1 so it can overlap
   rhs = prevIndex.AddPrefix(
     std::string(aut.stateVars_ + aut.symbolVars_, 'X'),
@@ -138,15 +148,18 @@ ComputeNextIndex(
     aut.stateVars_ + aut.symbolVars_ + aut.stateVars_ + aut.stateVars_
   );
 
+  // TODO: optimize
   // there exists such "q3" that applies to previous statement
   result = result.Exists(aut.stateVars_);
 
+  // TODO: optimize
   // reindex Q1 so it can overlap
   lhs = aut.transitions_->AddPostfix(
     std::string(aut.stateVars_, 'X'),
     std::make_pair(0, aut.stateVars_)
   );
 
+  // TODO: optimize
   // reindex Q1 so it can overlap
   rhs = result.AddPrefix(
     std::string(aut.stateVars_, 'X'),
@@ -160,18 +173,22 @@ ComputeNextIndex(
     aut.stateVars_ + aut.stateVars_ + aut.symbolVars_ + aut.stateVars_
   );
 
+  // TODO: optimize
   // previous statement applies to all "q2" in Q
   result = result.ForAll(aut.stateVars_);
 
+  // TODO: optimize
   // previous statement applies to all "a" in Sigma
   result = result.ForAll(aut.symbolVars_);
 
+  // TODO: optimize
   // rename F so it can overlap
   lhs = aut.finalStates_->AddPostfix(
     std::string(aut.stateVars_, 'X'),
     std::make_pair(0, aut.stateVars_)
   );
 
+  // TODO: optimize
   // rename F so it can overlap
   rhs = aut.finalStates_->AddPrefix(
     std::string(aut.stateVars_, 'X'),
@@ -198,12 +215,15 @@ std::string SymbolicFiniteAutCore::ComputeSimulation(
   StateDict *                   stateDict
 )
 {
+  // TODO: optimize
   // compute inital simulation relation
   SymbolicFiniteAutBDD prevIndexRelation = ComputeInitialRelation(aut);
 
+  // TODO: optimize
   // compute simulation relation with next index
   SymbolicFiniteAutBDD nextIndexRelation = ComputeNextIndex(aut, prevIndexRelation);
 
+  // TODO: maybe add constraint of highest desired index
   // while newly computed simulation relation changes
   while(prevIndexRelation != nextIndexRelation)
   {
@@ -212,6 +232,7 @@ std::string SymbolicFiniteAutCore::ComputeSimulation(
   }
 
   std::string result;
+  // TODO: implement some kind of QxQ intersection at this point
   if (stateDict != nullptr)
   { // explicit serialization
     AssignmentList list = nextIndexRelation.GetAllAssignments(true);

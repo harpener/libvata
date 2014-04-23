@@ -167,11 +167,6 @@ void SymbolicFiniteAutCore::LoadFromAutDescSymbolic(
         this->stateVars_ = transition.third.size();
       }
 
-      else if (this->stateVars_ != transition.third.size())
-      { // check number of variables in state
-        throw std::runtime_error("Number of variables in states differs.");
-      }
-
       this->initialStates_->AddAssignment(transition.third);
     }
 
@@ -187,29 +182,9 @@ void SymbolicFiniteAutCore::LoadFromAutDescSymbolic(
         this->stateVars_ = transition.first.front().size();
       }
 
-      else if (this->stateVars_ != transition.first.front().size())
-      { // check number of variables in state
-        throw std::runtime_error("Number of variables in states differs.");
-      }
-
       if (this->symbolVars_ == 0)
       { // symbol is new
         this->symbolVars_ = transition.second.size();
-      }
-
-      else if (this->symbolVars_ != transition.second.size())
-      { // check number of variables in symbol
-        throw std::runtime_error("Number of variables in symbols differs.");
-      }
-
-      if (this->stateVars_ == 0)
-      { // state is new
-        this->stateVars_ = transition.third.size();
-      }
-
-      else if (this->stateVars_ != transition.third.size())
-      { // check number of variables in state
-        throw std::runtime_error("Number of variables in states differs.");
       }
 
       this->transitions_->AddAssignment(
@@ -227,11 +202,6 @@ void SymbolicFiniteAutCore::LoadFromAutDescSymbolic(
     if (this->stateVars_ == 0)
     { // state is new
       this->stateVars_ = finalState.size();
-    }
-
-    else if (this->stateVars_ != finalState.size())
-    { // check number of variables in state
-      throw std::runtime_error("Number of variables in states differs.");
     }
 
     this->finalStates_->AddAssignment(finalState);
@@ -315,29 +285,9 @@ void SymbolicFiniteAutCore::AddTransition(
     this->stateVars_ = lstate.length();
   }
 
-  else if (this->stateVars_ != lstate.length())
-  { // check number of variables in state
-    throw std::runtime_error("Number of variables in states differs.");
-  }
-
   if (this->symbolVars_ == 0)
   { // symbol is new
     this->symbolVars_ = symbol.length();
-  }
-
-  else if (this->symbolVars_ != symbol.length())
-  { // check number of variables in symbol
-    throw std::runtime_error("Number of variables in symbols differs.");
-  }
-
-  if (this->stateVars_ == 0)
-  { // state is new
-    this->stateVars_ = rstate.length();
-  }
-
-  else if (this->stateVars_ != rstate.length())
-  { // check number of variables in state
-    throw std::runtime_error("Number of variables in states differs.");
   }
 
   this->transitions_->AddAssignment(
@@ -360,11 +310,6 @@ void SymbolicFiniteAutCore::AddInitialState(
     this->stateVars_ = state.length();
   }
 
-  else if (this->stateVars_ != state.length())
-  { // check number of variables in state
-    throw std::runtime_error("Number of variables in states differs.");
-  }
-
   this->initialStates_->AddAssignment(state);
 }
 
@@ -379,14 +324,10 @@ void SymbolicFiniteAutCore::AddFinalState(
     this->stateVars_ = state.length();
   }
 
-  else if (this->stateVars_ != state.length())
-  { // check number of variables in state
-    throw std::runtime_error("Number of variables in states differs.");
-  }
-
   this->finalStates_->AddAssignment(state);
 }
 
+// TODO: optimize by renaming variables
 SymbolicFiniteAutCore SymbolicFiniteAutCore::ReindexStates(
   const std::string &     str,
   const bool &            isPrefix,
@@ -459,6 +400,7 @@ SymbolicFiniteAutCore SymbolicFiniteAutCore::ReindexStates(
   return result;
 }
 
+// TODO: optimize by renaming variables
 SymbolicFiniteAutCore SymbolicFiniteAutCore::ReindexStates(
   const SymbolicVarAsgn & asgn,
   const bool &            isPrefix,

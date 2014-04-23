@@ -20,6 +20,7 @@ SymbolicFiniteAutCore SymbolicFiniteAutCore::Intersection(
   SymbolicFiniteAutCore result;
   SymbolicFiniteAutBDD::IntersectionApplyFunctor isectFunc;
 
+  // TODO: optimize
   // add such postfix to lhs states and such prefix to rhs states,
   // so they overlap each other for cartesian product
   SymbolicFiniteAutCore tempLhs = lhs.ReindexStates(
@@ -60,6 +61,7 @@ SymbolicFiniteAutCore SymbolicFiniteAutCore::Intersection(
     result.stateVars_
   );
 
+  // TODO: optimize?
   // state translation follows after the operation,
   // it can be predicted, but then it would have redundant translations
   if (pTranslMap != nullptr)

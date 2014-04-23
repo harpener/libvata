@@ -14,17 +14,13 @@ using VATA::SymbolicFiniteAutBDD;
 SymbolicFiniteAutBDD::SymbolicFiniteAutBDD()
   : vars_(0),
     mtbdd_(new BDD(false))
-{
-  this->SetDefaultValue(false);
-}
+{}
 
 SymbolicFiniteAutBDD::SymbolicFiniteAutBDD(
   const SymbolicFiniteAutBDD & bdd
 ) : vars_(bdd.vars_),
     mtbdd_(new BDD(*bdd.mtbdd_))
-{
-  this->SetDefaultValue(false);
-}
+{}
 
 SymbolicFiniteAutBDD::SymbolicFiniteAutBDD(
   SymbolicFiniteAutBDD && bdd
@@ -32,8 +28,6 @@ SymbolicFiniteAutBDD::SymbolicFiniteAutBDD(
     mtbdd_(std::move(bdd.mtbdd_))
 {
   bdd.mtbdd_ = nullptr;
-
-  this->SetDefaultValue(false);
 }
 
 SymbolicFiniteAutBDD::SymbolicFiniteAutBDD(
@@ -49,9 +43,7 @@ SymbolicFiniteAutBDD::SymbolicFiniteAutBDD(
   const SymbolicVarAsgn & asgn
 ) : vars_(asgn.length()),
     mtbdd_(new BDD(asgn, true, false))
-{
-  this->SetDefaultValue(false);
-}
+{}
 
 SymbolicFiniteAutBDD::~SymbolicFiniteAutBDD()
 {}
@@ -68,8 +60,6 @@ SymbolicFiniteAutBDD & SymbolicFiniteAutBDD::operator=(
     *this->mtbdd_ = *rhs.mtbdd_;
   }
 
-  this->SetDefaultValue(false);
-
   return *this;
 }
 
@@ -83,8 +73,6 @@ SymbolicFiniteAutBDD & SymbolicFiniteAutBDD::operator=(
 
   this->vars_  = std::move(rhs.vars_);
   this->mtbdd_ = std::move(rhs.mtbdd_);
-
-  this->SetDefaultValue(false);
 
   return *this;
 }
@@ -102,15 +90,11 @@ bool SymbolicFiniteAutBDD::operator==(
   equivBDD.SetDefaultValue(false);
   AssignmentList list = equivBDD.GetAllAssignments();
 
-  if (list.size() > 0 && list.front().ToString() == "X" && this->vars_ == rhs.vars_)
-  {
-    return true;
-  }
-
-  else
-  {
-    return false;
-  }
+  return (
+    list.size() > 0 &&
+    list.front().ToString() == "X" &&
+    this->vars_ == rhs.vars_
+  );
 }
 
 bool SymbolicFiniteAutBDD::operator!=(
@@ -182,7 +166,6 @@ void SymbolicFiniteAutBDD::AddAssignment(
 
   UnionApplyFunctor unionFunc;
   *this->mtbdd_ = unionFunc(*this->mtbdd_, BDD(asgn, true, false));
-  this->SetDefaultValue(false);
 }
 
 SymbolicFiniteAutBDD::AssignmentList SymbolicFiniteAutBDD::GetAllAssignments(
@@ -196,7 +179,7 @@ const
 
   for (AssignmentList::iterator it = list.begin(); it != list.end(); it++)
   { // completes the assignment according to desired length
-    (*it).append(SymbolicVarAsgn(std::string(this->vars_ - (*it).length(), 'X')));
+    (*it).append(SymbolicVarAsgn(this->vars_ - (*it).length()));
   }
 
   if (concretize)
@@ -291,8 +274,8 @@ SymbolicFiniteAutBDD::SymbolicVarAsgn SymbolicFiniteAutBDD::MergeTransition(
 
 void SymbolicFiniteAutBDD::SplitTransition(
   const SymbolicVarAsgn & transition,
-  const size_t &                stateVars,
-  const size_t &                symbolVars,
+  const size_t &          stateVars,
+  const size_t &          symbolVars,
   size_t &                lstate,
   size_t &                symbol,
   size_t &                rstate
@@ -359,6 +342,7 @@ void SymbolicFiniteAutBDD::SplitTransition(
   rstate = str.substr(stateVars + symbolVars, stateVars);
 }
 
+// TODO: optimize by renaming variables
 SymbolicFiniteAutBDD SymbolicFiniteAutBDD::AddPrefix(
   const std::string & str,
   const BDDSet &      set,
@@ -391,6 +375,7 @@ SymbolicFiniteAutBDD SymbolicFiniteAutBDD::AddPrefix(
   return result;
 }
 
+// TODO: optimize by renaming variables
 SymbolicFiniteAutBDD SymbolicFiniteAutBDD::AddPrefix(
   const SymbolicVarAsgn & asgn,
   const BDDSet &          set,
@@ -400,6 +385,7 @@ SymbolicFiniteAutBDD SymbolicFiniteAutBDD::AddPrefix(
   return this->AddPrefix(asgn.ToString(), set, pTranslMap);
 }
 
+// TODO: optimize by renaming variables
 SymbolicFiniteAutBDD SymbolicFiniteAutBDD::AddPostfix(
   const std::string & str,
   const BDDSet &      set,
@@ -432,6 +418,7 @@ SymbolicFiniteAutBDD SymbolicFiniteAutBDD::AddPostfix(
   return result;
 }
 
+// TODO: optimize by renaming variables
 SymbolicFiniteAutBDD SymbolicFiniteAutBDD::AddPostfix(
   const SymbolicVarAsgn & asgn,
   const BDDSet &          set,
@@ -441,6 +428,7 @@ SymbolicFiniteAutBDD SymbolicFiniteAutBDD::AddPostfix(
   return this->AddPostfix(asgn.ToString(), set, pTranslMap);
 }
 
+// TODO: optimize by variables projection with union operation
 SymbolicFiniteAutBDD SymbolicFiniteAutBDD::Exists(
   const size_t & vars
 )
@@ -462,6 +450,7 @@ SymbolicFiniteAutBDD SymbolicFiniteAutBDD::Exists(
   return result;
 }
 
+// TODO: optimize by variables projection with intersection operation
 SymbolicFiniteAutBDD SymbolicFiniteAutBDD::ForAll(
   const size_t & vars
 )
