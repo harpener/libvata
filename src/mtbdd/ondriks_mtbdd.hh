@@ -211,7 +211,7 @@ private:  // private methods
 	}
 
 
-	NodePtrType getRoot() const
+	const NodePtrType& getRoot() const
 	{
 		return root_;
 	}
@@ -525,18 +525,23 @@ public:   // public methods
    */
   SymbolicVarAsgn::AssignmentList GetAllAssignments() const
   {
-    assert(!IsNull(root_));
+    assert(!IsNull(this->getRoot()));
 
-    SymbolicVarAsgn::AssignmentList vec;
-    VarType var = 1; // default number of variables in empty mtbdd
-
-    if (IsInternal(root_))
-    { // in case of internal node determine number of variables in assignment
-      var += GetVarFromInternal(root_); 
+    // number of variables in assignments
+    VarType vars = 1;
+    if (IsInternal(this->getRoot()))
+    {
+      vars += GetVarFromInternal(this->getRoot());
     }
 
-    SymbolicVarAsgn asgn = SymbolicVarAsgn(var);
-    RecTraverse(root_, asgn, vec);
+    // assignment with DONT_CARE variables
+    SymbolicVarAsgn asgn = SymbolicVarAsgn(vars);
+
+    // result vector
+    SymbolicVarAsgn::AssignmentList vec;
+
+    // recursive traverse
+    RecTraverse(this->getRoot(), asgn, vec);
 
     return vec;
   }
@@ -556,33 +561,28 @@ public:   // public methods
   {
     assert(!IsNull(node));
 
-		if (IsInternal(node)) 
-    { // internal node
-      SymbolicVarAsgn lowAsgn(asgn);
-      SymbolicVarAsgn highAsgn(asgn);
+		if (IsInternal(node))
+    {
+      // index of current node variable
+      VarType var = GetVarFromInternal(node);
 
-      // low successor assignment
-      lowAsgn.SetIthVariableValue(
-        GetVarFromInternal(node),
-        SymbolicVarAsgn::ZERO
-      );
-      // high successor assignment
-      highAsgn.SetIthVariableValue(
-        GetVarFromInternal(node),
-        SymbolicVarAsgn::ONE
-      );
+      // low successor
+      asgn.SetIthVariableValue(var, SymbolicVarAsgn::ZERO);
+      RecTraverse(GetLowFromInternal(node), asgn, vec);
 
-      // continue with low successor
-      RecTraverse(GetLowFromInternal(node), lowAsgn, vec);
-      // continue with high successor
-      RecTraverse(GetHighFromInternal(node), highAsgn, vec);
+      // high successor
+      asgn.SetIthVariableValue(var, SymbolicVarAsgn::ONE);
+      RecTraverse(GetHighFromInternal(node), asgn, vec);
+
+      // recursive patch
+      asgn.SetIthVariableValue(var, SymbolicVarAsgn::DONT_CARE);
     }
 
     else
     { // terminal node
       assert(IsLeaf(node));
 
-      if (GetDataFromLeaf(node) != defaultValue_)
+      if (GetDataFromLeaf(node) != this->GetDefaultValue())
       { // valid assignment
         vec.push_back(asgn);
       }
