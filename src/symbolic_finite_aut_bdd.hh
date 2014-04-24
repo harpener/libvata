@@ -82,7 +82,7 @@ public: // apply functors
       const bool & val
     )
     {
-			return ~val;
+			return !val;
 		}
 	};
 
