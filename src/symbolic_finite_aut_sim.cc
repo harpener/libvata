@@ -12,32 +12,39 @@
 using VATA::SymbolicFiniteAutCore;
 
 SymbolicFiniteAutCore::SymbolicFiniteAutBDD SymbolicFiniteAutCore::
-ComputeInitialRelation(
+ComputeInitialSimulation(
   const SymbolicFiniteAutCore & aut
 )
 {
-  SymbolicFiniteAutBDD result, temp, lhs, rhs;
+  SymbolicFiniteAutBDD result, lhs, rhs;
   SymbolicFiniteAutBDD::UnionApplyFunctor unionFunc;
   SymbolicFiniteAutBDD::IntersectionApplyFunctor isectFunc;
   SymbolicFiniteAutBDD::ConsequenceApplyFunctor conseqFunc;
 
-  // TODO: optimize
   // for a pair "q1" in Q1 and "a" in Sigma there exists such "q2" in Q2
   // that the triple "q1", "a" and "q2" are in Delta
-  result = aut.transitions_->Exists(aut.stateVars_);
-
-  // TODO: optimize
-  // reindex Q1 so it can overlap
-  lhs = result.AddPostfix(
-    std::string(aut.stateVars_, 'X'),
-    std::make_pair(0, aut.stateVars_)
+  result = aut.transitions_->Project(
+    aut.stateVars_ + aut.symbolVars_,
+    [aut](const size_t var){
+      if (var < (aut.stateVars_ + aut.symbolVars_)) return false;
+      else return true;
+    },
+    unionFunc
   );
 
-  // TODO: optimize
   // reindex Q1 so it can overlap
-  rhs = result.AddPrefix(
-    std::string(aut.stateVars_, 'X'),
-    std::make_pair(0, aut.stateVars_)
+  lhs = result.Rename(
+    aut.stateVars_ + aut.stateVars_ + aut.symbolVars_,
+    [aut](const size_t var){
+      if (var < aut.stateVars_) return var;
+      else return var + aut.stateVars_;
+    }
+  );
+
+  // reindex Q1 so it can overlap
+  rhs = result.Rename(
+    aut.stateVars_ + aut.stateVars_ + aut.symbolVars_,
+    [aut](const size_t var){return var + aut.stateVars_;}
   );
 
   // if "q1" in Q1 transitions with "a" in Sigma
@@ -47,71 +54,69 @@ ComputeInitialRelation(
     aut.stateVars_ + aut.stateVars_ + aut.symbolVars_
   );
 
-  // TODO: optimize
   // previous statement applies to all "a" in Sigma
-  result = result.ForAll(aut.symbolVars_);
-
-  // TODO: optimize
-  // reindex F so it can overlap
-  lhs = aut.finalStates_->AddPostfix(
-    std::string(aut.stateVars_, 'X'),
-    std::make_pair(0, aut.stateVars_)
+  result = result.Project(
+    aut.stateVars_ + aut.stateVars_,
+    [aut](const size_t var){
+      if (var < (aut.stateVars_ + aut.stateVars_)) return false;
+      else return true;
+    },
+    isectFunc
   );
 
-  // TODO: optimize
   // reindex F so it can overlap
-  rhs = aut.finalStates_->AddPrefix(
-    std::string(aut.stateVars_, 'X'),
-    std::make_pair(0, aut.stateVars_)
+  rhs = aut.finalStates_->Rename(
+    aut.stateVars_ + aut.stateVars_,
+    [aut](const size_t var){return var + aut.stateVars_;}
   );
 
   // if "q1" belongs to F then "q2" must belong to F as well
-  temp = SymbolicFiniteAutBDD(
-    conseqFunc(lhs.GetBDD(), rhs.GetBDD()),
+  rhs = SymbolicFiniteAutBDD(
+    conseqFunc(aut.finalStates_->GetBDD(), rhs.GetBDD()),
     aut.stateVars_ + aut.stateVars_
   );
 
   // apply previous statement on simulation relation
   result = SymbolicFiniteAutBDD(
-    isectFunc(temp.GetBDD(), result.GetBDD()),
+    isectFunc(result.GetBDD(), rhs.GetBDD()),
     aut.stateVars_ + aut.stateVars_
   );
 
-  // if there are no transitions then cartesian product of final states is valid
-  temp = SymbolicFiniteAutBDD(
-    isectFunc(lhs.GetBDD(), rhs.GetBDD()),
+  // reindex F so it can overlap
+  rhs = aut.finalStates_->Rename(
+    aut.stateVars_ + aut.stateVars_,
+    [aut](const size_t var){return var + aut.stateVars_;}
+  );
+
+  // if there are no transitions
+  // then cartesian product of final states is valid
+  rhs = SymbolicFiniteAutBDD(
+    isectFunc(aut.finalStates_->GetBDD(), rhs.GetBDD()),
     aut.stateVars_ + aut.stateVars_
   );
 
   // apply previous statement on simulation relation
   result = SymbolicFiniteAutBDD(
-    unionFunc(temp.GetBDD(), result.GetBDD()),
+    unionFunc(result.GetBDD(), rhs.GetBDD()),
     aut.stateVars_ + aut.stateVars_
   );
 
-  // TODO: optimize
   // reindex I so it can overlap
-  lhs = aut.initialStates_->AddPostfix(
-    std::string(aut.stateVars_, 'X'),
-    std::make_pair(0, aut.stateVars_)
+  rhs = aut.initialStates_->Rename(
+    aut.stateVars_ + aut.stateVars_,
+    [aut](const size_t var){return var + aut.stateVars_;}
   );
 
-  // TODO: optimize
-  // reindex I so it can overlap
-  rhs = aut.initialStates_->AddPrefix(
-    std::string(aut.stateVars_, 'X'),
-    std::make_pair(0, aut.stateVars_)
-  );
-
-  // if there are no transitions then cartesian product of initial states is valid
-  temp = SymbolicFiniteAutBDD(
-    isectFunc(lhs.GetBDD(), rhs.GetBDD()),
+  // if there are no transitions
+  // then cartesian product of initial states is valid
+  rhs = SymbolicFiniteAutBDD(
+    isectFunc(aut.initialStates_->GetBDD(), rhs.GetBDD()),
     aut.stateVars_ + aut.stateVars_
   );
 
   // apply previous statement on simulation relation
   result = SymbolicFiniteAutBDD(
-    unionFunc(temp.GetBDD(), result.GetBDD()),
+    unionFunc(result.GetBDD(), rhs.GetBDD()),
     aut.stateVars_ + aut.stateVars_
   );
 
@@ -119,124 +124,180 @@ ComputeInitialRelation(
 }
 
 SymbolicFiniteAutCore::SymbolicFiniteAutBDD SymbolicFiniteAutCore::
-ComputeNextIndex(
+IterateSimulation(
   const SymbolicFiniteAutCore & aut,
   const SymbolicFiniteAutBDD &  prevIndex
 )
 {
-  SymbolicFiniteAutBDD result, temp, lhs, rhs;
-  SymbolicFiniteAutBDD::ConsequenceApplyFunctor conseqFunc;
+  SymbolicFiniteAutBDD result, lhs, rhs;
+  SymbolicFiniteAutBDD::UnionApplyFunctor unionFunc;
   SymbolicFiniteAutBDD::IntersectionApplyFunctor isectFunc;
+  SymbolicFiniteAutBDD::ConsequenceApplyFunctor conseqFunc;
 
-  // TODO: optimize
   // reindex Q2 so it can overlap
-  lhs = aut.transitions_->AddPostfix(
-    std::string(aut.stateVars_, 'X'),
-    std::make_pair(aut.stateVars_, aut.symbolVars_)
+  lhs = aut.transitions_->Rename(
+    aut.stateVars_ + aut.stateVars_ + aut.symbolVars_ + aut.stateVars_ +
+    aut.stateVars_,
+    [aut](const size_t var){
+      if (var < (aut.stateVars_ + aut.symbolVars_)) return var + aut.stateVars_;
+      else return var + aut.stateVars_ + aut.stateVars_;
+    }
   );
 
-  // TODO: optimize
   // reindex Q1 so it can overlap
-  rhs = prevIndex.AddPrefix(
-    std::string(aut.stateVars_ + aut.symbolVars_, 'X'),
-    std::make_pair(0, aut.stateVars_)
+  rhs = prevIndex.Rename(
+    aut.stateVars_ + aut.stateVars_ + aut.symbolVars_ + aut.stateVars_ +
+    aut.stateVars_,
+    [aut](const size_t var){
+      return var + aut.stateVars_ + aut.stateVars_ + aut.symbolVars_;
+    }
   );
 
   // "q2" is simulated by "q3" AND "q4" transitions to "q3" using "a"
   result = SymbolicFiniteAutBDD(
     isectFunc(lhs.GetBDD(), rhs.GetBDD()),
-    aut.stateVars_ + aut.symbolVars_ + aut.stateVars_ + aut.stateVars_
+    aut.stateVars_ + aut.stateVars_ + aut.symbolVars_ + aut.stateVars_ +
+    aut.stateVars_
   );
 
-  // TODO: optimize
   // there exists such "q3" that applies to previous statement
-  result = result.Exists(aut.stateVars_);
-
-  // TODO: optimize
-  // reindex Q1 so it can overlap
-  lhs = aut.transitions_->AddPostfix(
-    std::string(aut.stateVars_, 'X'),
-    std::make_pair(0, aut.stateVars_)
+  result = result.Project(
+    aut.stateVars_ + aut.stateVars_ + aut.symbolVars_ + aut.stateVars_,
+    [aut](const size_t var){
+      if (var < (aut.stateVars_ + aut.stateVars_ + aut.symbolVars_ +
+                 aut.stateVars_))
+        return false;
+      else return true;
+    },
+    unionFunc
   );
 
-  // TODO: optimize
   // reindex Q1 so it can overlap
-  rhs = result.AddPrefix(
-    std::string(aut.stateVars_, 'X'),
-    std::make_pair(0, aut.stateVars_)
+  lhs = aut.transitions_->Rename(
+    aut.stateVars_ + aut.stateVars_ + aut.symbolVars_ + aut.stateVars_,
+    [aut](const size_t var){
+      if (var < aut.stateVars_) return var;
+      else return var + aut.stateVars_;
+    }
   );
 
   // if "q1" transitions to "q2" using "a"
   // then previous statements are valid
   result = SymbolicFiniteAutBDD(
-    conseqFunc(lhs.GetBDD(), rhs.GetBDD()),
+    conseqFunc(lhs.GetBDD(), result.GetBDD()),
     aut.stateVars_ + aut.stateVars_ + aut.symbolVars_ + aut.stateVars_
   );
 
-  // TODO: optimize
   // previous statement applies to all "q2" in Q
-  result = result.ForAll(aut.stateVars_);
-
-  // TODO: optimize
-  // previous statement applies to all "a" in Sigma
-  result = result.ForAll(aut.symbolVars_);
-
-  // TODO: optimize
-  // rename F so it can overlap
-  lhs = aut.finalStates_->AddPostfix(
-    std::string(aut.stateVars_, 'X'),
-    std::make_pair(0, aut.stateVars_)
+  result = result.Project(
+    aut.stateVars_ + aut.stateVars_ + aut.symbolVars_,
+    [aut](const size_t var){
+      if (var < (aut.stateVars_ + aut.stateVars_ + aut.symbolVars_))
+        return false;
+      else return true;
+    },
+    isectFunc
   );
 
-  // TODO: optimize
+  // previous statement applies to all "a" in Sigma
+  result = result.Project(
+    aut.stateVars_ + aut.stateVars_,
+    [aut](const size_t var){
+      if (var < (aut.stateVars_ + aut.stateVars_)) return false;
+      else return true;
+    },
+    isectFunc
+  );
+
   // rename F so it can overlap
-  rhs = aut.finalStates_->AddPrefix(
-    std::string(aut.stateVars_, 'X'),
-    std::make_pair(0, aut.stateVars_)
+  rhs = aut.finalStates_->Rename(
+    aut.stateVars_ + aut.stateVars_,
+    [aut](const size_t var){return var + aut.stateVars_;}
   );
 
   // if "q1" belongs to F then "q4" must belong to F as well
-  temp = SymbolicFiniteAutBDD(
-    conseqFunc(lhs.GetBDD(), rhs.GetBDD()),
+  rhs = SymbolicFiniteAutBDD(
+    conseqFunc(aut.finalStates_->GetBDD(), rhs.GetBDD()),
     aut.stateVars_ + aut.stateVars_
   );
 
   // apply previous statement on simulation relation
   result = SymbolicFiniteAutBDD(
-    isectFunc(temp.GetBDD(), result.GetBDD()),
+    isectFunc(result.GetBDD(), rhs.GetBDD()),
     aut.stateVars_ + aut.stateVars_
   );
 
   return result;
 }
 
-std::string SymbolicFiniteAutCore::ComputeSimulation(
-  const SymbolicFiniteAutCore & aut,
-  StateDict *                   stateDict
+SymbolicFiniteAutCore::SymbolicFiniteAutBDD SymbolicFiniteAutCore::
+ComputeSimulation(
+  const SymbolicFiniteAutCore & aut
 )
 {
-  // TODO: optimize
-  // compute inital simulation relation
-  SymbolicFiniteAutBDD prevIndexRelation = ComputeInitialRelation(aut);
+  // compute initial simulation relation
+  SymbolicFiniteAutBDD prevRelation = ComputeInitialSimulation(aut);
 
-  // TODO: optimize
-  // compute simulation relation with next index
-  SymbolicFiniteAutBDD nextIndexRelation = ComputeNextIndex(aut, prevIndexRelation);
+  // iterate simulation relation
+  SymbolicFiniteAutBDD nextRelation = IterateSimulation(aut,prevRelation);
 
-  // TODO: maybe add constraint of highest desired index
-  // while newly computed simulation relation changes
-  while(prevIndexRelation != nextIndexRelation)
-  {
-    prevIndexRelation = nextIndexRelation;
-    nextIndexRelation = ComputeNextIndex(aut, prevIndexRelation);
+  while(prevRelation != nextRelation)
+  { // iterate simulation relation until it stops changing
+    prevRelation = nextRelation;
+    nextRelation = IterateSimulation(aut, prevRelation);
   }
 
+  return nextRelation;
+}
+
+std::string SymbolicFiniteAutCore::DumpSimulation(
+  const SymbolicFiniteAutBDD & sim,
+  StateDict *                  stateDict
+)
+{
   std::string result;
-  // TODO: implement some kind of QxQ intersection at this point
+
+  // number of variables in BDD should be even
+  size_t stateVars = sim.GetVars() / 2;
+
   if (stateDict != nullptr)
   { // explicit serialization
-    AssignmentList list = nextIndexRelation.GetAllAssignments(true);
+    SymbolicFiniteAutBDD::IntersectionApplyFunctor isectFunc;
+    SymbolicFiniteAutBDD Q1, Q2, simLimited;
+    size_t size = stateDict->size();
+
+    // generate Q BDD
+    for (size_t i = 0; i < size; i++)
+    {
+      Q1.AddAssignment(SymbolicVarAsgn(stateVars, i));
+    }
+
+    // rename Q1 to Q2
+    Q2 = Q1.Rename(
+      2 * stateVars,
+      [stateVars](const size_t var){return var + stateVars;}
+    );
+
+    // create Q x Q relation
+    Q1.SetBDD(
+      isectFunc(
+        Q1.GetBDD(),
+        Q2.GetBDD()
+      )
+    );
+
+    // limit simulation relation to a valid set of states
+    simLimited = SymbolicFiniteAutBDD(
+      isectFunc(
+        sim.GetBDD(),
+        Q1.GetBDD()
+      ),
+      2 * stateVars
+    );
+
+    AssignmentList list = simLimited.GetAllAssignments(true);
     StateBackTranslStrict StateBackTranslFunc(stateDict->GetReverseMap());
+
     auto translFunc = [&StateBackTranslFunc](const std::string str){
       return StateBackTranslFunc(SymbolicFiniteAutBDD::FromSymbolic(str));
     };
@@ -244,22 +305,24 @@ std::string SymbolicFiniteAutCore::ComputeSimulation(
     for (auto elem : list)
     {
       std::string str = elem.ToString();
-      result += translFunc(str.substr(0 , aut.stateVars_)) + " <= ";
-      result += translFunc(str.substr(aut.stateVars_, aut.stateVars_)) + "\n";
+      result += translFunc(str.substr(0 , stateVars)) + " <= ";
+      result += translFunc(str.substr(stateVars, stateVars)) + "\n";
     }
+
+    return result;
   }
 
   else
   { // symbolic serialization
-    AssignmentList list = nextIndexRelation.GetAllAssignments();
+    AssignmentList list = sim.GetAllAssignments();
 
     for (auto elem : list)
     {
       std::string str = elem.ToString();
-      result += str.substr(0 , aut.stateVars_) + " <= ";
-      result += str.substr(aut.stateVars_, aut.stateVars_) + "\n";
+      result += str.substr(0 , stateVars) + " <= ";
+      result += str.substr(stateVars, stateVars) + "\n";
     }
-  }
 
-  return result;
+    return result;
+  }
 }

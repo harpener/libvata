@@ -35,10 +35,12 @@ int main()
 	// create dictionaries for translating state names to internal state numbers
 	Automaton::StateDict stateDict1, stateDict2;
   size_t state1(0), state2(0);
+
 	Automaton::StringToStateTranslWeak stateTransl1(
     stateDict1,
     [&state1](const std::string &){return state1++;}
   );
+
 	Automaton::StringToStateTranslWeak stateTransl2(
     stateDict2,
     [&state2](const std::string &){return state2++;}
@@ -47,6 +49,7 @@ int main()
 	// create dictionary for translating symbol names to internal symbol numbers
   Automaton::SymbolDict symbolDict;
   size_t symbol(0);
+
 	Automaton::StringToSymbolTranslWeak symbolTransl(
     symbolDict,
     [&symbol](const std::string &){return symbol++;}
@@ -54,18 +57,23 @@ int main()
 
 	// create and load the automata
 	Automaton aut1, aut2;
+
 	aut1.LoadFromString(*parser, aut1Str, stateTransl1, symbolTransl, "explicit");
   aut2.LoadFromString(*parser, aut2Str, stateTransl2, symbolTransl, "explicit");
 
   // execute union operation
   Automaton::StateToStateMap stateTranslMap1;
 	Automaton::StateToStateMap stateTranslMap2;
-  Automaton result = Automaton::Union(
-    aut1,
-    aut2,
+
+  Automaton result = Automaton::Union(aut1, aut2);
+
+  Automaton::GenUnionTransl(
+    stateDict1,
+    stateDict2,
     &stateTranslMap1,
     &stateTranslMap2
   );
+
 	Automaton::StateDict stateDictUnion = VATA::Util::CreateUnionStringToStateMap(
     stateDict1,
     stateDict2,

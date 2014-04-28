@@ -36,14 +36,12 @@ int main()
 
 	// create and load the automata
 	Automaton aut1, aut2;
+
 	aut1.LoadFromString(*parser, aut1Str, "symbolic");
   aut2.LoadFromString(*parser, aut2Str, "symbolic");
 
   // execute union operation
-  Automaton result = Automaton::Union(
-    aut1,
-    aut2
-  );
+  Automaton result = Automaton::Union(aut1, aut2);
 
 	// create serializer for the Timbuk format
 	std::unique_ptr<VATA::Serialization::AbstrSerializer> serializer(

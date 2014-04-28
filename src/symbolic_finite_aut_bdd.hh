@@ -43,10 +43,7 @@ public: // public data types
    */
   using StateToStateMap = VATA::SymbolicFiniteAut::StateToStateMap;
 
-private: // private data types
-
-  /// @brief  Position and length of one set in BDD
-  using BDDSet = std::pair<size_t, size_t>;
+public: // private data types
 
   /// @brief  Representation of a BDD
   using BDD = VATA::MTBDDPkg::OndriksMTBDD<bool>;
@@ -323,7 +320,7 @@ public: // getters and setters
    *
    * @return  Number of variables
    */
-  size_t GetVars() const;
+  const size_t & GetVars() const;
 
   /**
    * @brief  Setter of number of variables
@@ -339,7 +336,7 @@ public: // getters and setters
    *
    * @return  BDD
    */
-  BDD GetBDD() const;
+  const BDD & GetBDD() const;
 
   /**
    * @brief  Setter of BDD
@@ -355,7 +352,7 @@ public: // getters and setters
    *
    * @return Default value
    */
-  bool GetDefaultValue() const;
+  const bool & GetDefaultValue() const;
 
   /**
    * @brief  Setter of default value in BDD
@@ -541,89 +538,61 @@ public: // methods
     std::string &           rstate
   );
 
-  /**
-   * @brief  Adds prefix to all assignments in set
-   *
-   * @param  str         String prefix
-   * @param  set         Range of set
-   * @param  pTranslMap  Translation map of assignments
-   *
-   * @return  BDD with given prefixes
-   */
-  SymbolicFiniteAutBDD AddPrefix(
-    const std::string & str,
-    const BDDSet &      set,
-    StateToStateMap *   pTranslMap = nullptr
-  ) const;
+	/**
+	 * @brief  Project out variables specified by a predicate
+	 *
+	 * This method returns an MTBDD with removed nodes that satisfy the @p pred
+	 * predicate. If such a node is encountered in a traversal of the MTBDD, its
+	 * children are combined using a binary apply operation that performs the @p
+	 * applyFunc function on the leaves.
+	 *
+   * @param[in]  vars       Result number of variables of assignments
+	 * @param[in]  pred       The predicate that denotes the nodes to be removed
+	 * @param[in]  applyFunc  The apply functor to apply on children of a node
+	 *                        projected out
+	 *
+	 * @returns  An MTBDD that corresponds to the projection given by the input
+	 *           parameters
+	 */
+	template <class VarPredicate, class ApplyFunc>
+  SymbolicFiniteAutBDD Project(
+    const size_t & vars,
+		VarPredicate pred,
+		ApplyFunc &  applyFunc
+  ) const
+  {
+    return SymbolicFiniteAutBDD(
+      GetBDD().Project(pred, applyFunc),
+      vars
+    );
+  }
 
-  /**
-   * @brief  Adds prefix to all assignments in set
-   *
-   * @param  asgn        Symbolic prefix
-   * @param  set         Range of set
-   * @param  pTranslMap  Translation map of assignments
-   *
-   * @return  BDD with given prefixes
-   */
-  SymbolicFiniteAutBDD AddPrefix(
-    const SymbolicVarAsgn & asgn,
-    const BDDSet &          set,
-    StateToStateMap *       pTranslMap = nullptr
-  ) const;
-
-  /**
-   * @brief  Adds postfix to all assignments in set
-   *
-   * @param  asgn        String postfix
-   * @param  set         Range of set
-   * @param  pTranslMap  Translation map of assignments
-   *
-   * @return  BDD with given postfixes
-   */
-  SymbolicFiniteAutBDD AddPostfix(
-    const std::string & str,
-    const BDDSet &      set,
-    StateToStateMap *   pTranslMap = nullptr
-  ) const;
-
-  /**
-   * @brief  Adds postfix to all assignments in set
-   *
-   * @param  asgn        Symbolic postfix
-   * @param  set         Range of set
-   * @param  pTranslMap  Translation map of assignments
-   *
-   * @return  BDD with given postfixes
-   */
-  SymbolicFiniteAutBDD AddPostfix(
-    const SymbolicVarAsgn & asgn,
-    const BDDSet &          set,
-    StateToStateMap *       pTranslMap = nullptr
-  ) const;
-
-  /**
-   * @brief  Existential quantification on BDD with n > 1 sets
-   *
-   * @param  vars  Number of variables of an element in last set
-   *
-   * @return  BDD representing relation of such n-1 sets, for which
-              at least one element in the n-th set was in relation.
-   */
-  SymbolicFiniteAutBDD Exists(
-    const size_t & vars
-  );
-
-  /**
-   * @brief  Universal quantification on BDD with n > 1 sets
-   *
-   * @param  vars  Number of variables of an element in last set
-   *
-   * @return  BDD representing relation of such n-1 sets, for which
-              all elements in the n-th set were in relation.
-   */
-  SymbolicFiniteAutBDD ForAll(
-    const size_t & vars
-  );
+	/**
+	 * @brief  Rename variables
+	 *
+	 * This method renames the variables of the MTBDD according to the renaming
+	 * functor given in @p renamer.
+	 *
+   * @param[in]      vars     Result number of variables of assignments
+	 * @param[in,out]  renamer  A functor that renames the variables
+	 *
+	 * @returns  An MTBDD with renamed variables
+	 *
+	 * @note  The @p renamer must respect the ordering of ALL variables. That is,
+	 *        for all x, y, if x < y, then it must hold that renamer(x) <
+	 *        renamer(y)
+	 */
+	template <class RenamingF>
+  SymbolicFiniteAutBDD Rename(
+    const size_t & vars,
+		RenamingF renamer
+  ) const
+  {
+    return SymbolicFiniteAutBDD(
+      GetBDD().Rename(renamer),
+      vars
+    );
+  }
 };
 
 #endif // _VATA_SYMBOLIC_FINITE_AUT_BDD_HH_

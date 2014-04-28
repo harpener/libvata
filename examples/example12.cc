@@ -36,14 +36,12 @@ int main()
 
 	// create and load the automata
 	Automaton aut1, aut2;
+
 	aut1.LoadFromString(*parser, aut1Str, "symbolic");
   aut2.LoadFromString(*parser, aut2Str, "symbolic");
 
   // execute intersection operation
-  Automaton result = Automaton::Intersection(
-    aut1,
-    aut2
-  );
+  Automaton result = Automaton::Intersection(aut1, aut2);
 
 	// create serializer for the Timbuk format
 	std::unique_ptr<VATA::Serialization::AbstrSerializer> serializer(

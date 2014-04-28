@@ -443,16 +443,27 @@ public: // public methods
    *
    * @param  lhs  First automaton for union
    * @param  rhs  Second automaton for union
-   * @param  pTranslMapLhs  Translation map of states of first automaton
-   * @param  pTranslMapRhs  Translation map of states of second automaton
    *
    * return  Union of given automata
    */
 	static SymbolicFiniteAut Union(
 		const SymbolicFiniteAut & lhs,
-		const SymbolicFiniteAut & rhs,
-		StateToStateMap *         pTranslMapLhs = nullptr,
-		StateToStateMap *         pTranslMapRhs = nullptr
+		const SymbolicFiniteAut & rhs
+  );
+
+  /**
+   * @brief  Generates state translation dictionaries after union
+   *
+   * @param  lhs       State translation dictionary of first automaton
+   * @param  rhs       State translation dictionary of second automaton
+   * @param  lhsUnion  @p lhs translation map after union
+   * @param  rhsUnion  @p rhs translation map after union
+   */
+  static void GenUnionTransl(
+    const StateDict & lhs,
+    const StateDict & rhs,
+    StateToStateMap * lhsUnion,
+    StateToStateMap * rhsUnion
   );
 
   /**
@@ -463,24 +474,34 @@ public: // public methods
    *
    * @param  lhs  First automaton for intersection
    * @param  rhs  Second automaton for intersection
-   * @param  pTranslMap  Translation map of states
    *
    * return  Intersection of given automata
    */
 	static SymbolicFiniteAut Intersection(
   	const SymbolicFiniteAut & lhs,
-  	const SymbolicFiniteAut & rhs,
-  	ProductTranslMap *        pTranslMap = nullptr
+  	const SymbolicFiniteAut & rhs
   );
 
   /**
-   * @brief  Compute a simulation on states
+   * @brief  Generates state translation dictionary after intersection
+   *
+   * @param  lhs             State translation dictionary of first automaton
+   * @param  rhs             State translation dictionary of second automaton
+   * @param  stateDictIsect  @p stateDict translation map after intersection
+   */
+  static void GenIsectTransl(
+    const StateDict & lhs,
+    const StateDict & rhs,
+    ProductTranslMap * stateDictIsect
+  );
+
+  /**
+   * @brief  Compute and dumps simulation relation into a string
    *
    * @param  aut  Given automaton
-   * @param  stateDict  Bidirectional dictionary translating between string
-                        and internal representation of a state
+   * @param  stateDict  State translation dictionary
    *
-   * return  String describing states in simulation relation
+   * return  String describing simulation relation
    */
 	static std::string ComputeSimulation(
   	const SymbolicFiniteAut & aut,

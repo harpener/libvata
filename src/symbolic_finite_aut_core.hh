@@ -132,13 +132,13 @@ private: // data members
   /// @brief  Number of variables in a symbolic representation of a symbol
   size_t symbolVars_;
 
-  /// @brief  TransitionsBDD instance
+  /// @brief  Transitions
   TransitionsBDDPtr transitions_;
 
-  /// @brief  InitialStatesBDD instance
+  /// @brief  Initial states
   InitialStatesBDDPtr initialStates_;
 
-  /// @brief  FinalStatesBDD instance
+  /// @brief  Final states
   FinalStatesBDDPtr finalStates_;
 
 public: // instantiation
@@ -495,36 +495,6 @@ public: // public methods
   );
 
   /**
-   * @brief  Reindexing all states
-   *
-   * @param  str         String prefix
-   * @param  isPrefix    Prefix if true, postfix if false
-   * @param  pTranslMap  Translation map of assignments
-   *
-   * @return  Automaton core with reindexed states
-   */
-  SymbolicFiniteAutCore ReindexStates(
-    const std::string &     str,
-    const bool &            isPrefix,
-    StateToStateMap *       pTranslMap = nullptr
-  ) const;
-
-  /**
-   * @brief  Reindexing all states
-   *
-   * @param  asgn        Symbolic prefix
-   * @param  isPrefix    Prefix if true, postfix if false
-   * @param  pTranslMap  Translation map of assignments
-   *
-   * @return  Automaton core with reindexed states
-   */
-  SymbolicFiniteAutCore ReindexStates(
-    const SymbolicVarAsgn & asgn,
-    const bool &            isPrefix,
-    StateToStateMap *       pTranslMap = nullptr
-  ) const;
-
-  /**
    * @brief  Union of two automata
    *
    * @note
@@ -532,16 +502,27 @@ public: // public methods
    *
    * @param  lhs  First automaton for union
    * @param  rhs  Second automaton for union
-   * @param  pTranslMapLhs  Translation map of states of first automaton
-   * @param  pTranslMapRhs  Translation map of states of second automaton
    *
    * return  Union of given automata
    */
 	static SymbolicFiniteAutCore Union(
   	const SymbolicFiniteAutCore & lhs,
-  	const SymbolicFiniteAutCore & rhs,
-  	StateToStateMap *             pTranslMapLhs = nullptr,
-  	StateToStateMap *             pTranslMapRhs = nullptr
+  	const SymbolicFiniteAutCore & rhs
+  );
+
+  /**
+   * @brief  Generates state translation dictionaries after union
+   *
+   * @param  lhs       State translation dictionary of first automaton
+   * @param  rhs       State translation dictionary of second automaton
+   * @param  lhsUnion  @p lhs translation map after union
+   * @param  rhsUnion  @p rhs translation map after union
+   */
+  static void GenUnionTransl(
+    const StateDict & lhs,
+    const StateDict & rhs,
+    StateToStateMap * lhsUnion,
+    StateToStateMap * rhsUnion
   );
 
   /**
@@ -552,52 +533,73 @@ public: // public methods
    *
    * @param  lhs  First automaton for intersection
    * @param  rhs  Second automaton for intersection
-   * @param  pTranslMap  Translation map of states
    *
    * return  Intersection of given automata
    */
 	static SymbolicFiniteAutCore Intersection(
   	const SymbolicFiniteAutCore & lhs,
-  	const SymbolicFiniteAutCore & rhs,
-  	ProductTranslMap *            pTranslMap = nullptr
+  	const SymbolicFiniteAutCore & rhs
   );
 
   /**
-   * @brief  Compute a simulation on states
+   * @brief  Generates state translation dictionary after intersection
    *
-   * @param  aut  Given automaton
-   * @param  stateDict  Bidirectional dictionary translating between string
-                        and internal representation of a state
-   *
-   * return  String describing states in simulation relation
+   * @param  lhs             State translation dictionary of first automaton
+   * @param  rhs             State translation dictionary of second automaton
+   * @param  stateDictIsect  @p stateDict translation map after intersection
    */
-	static std::string ComputeSimulation(
-  	const SymbolicFiniteAutCore & aut,
-    StateDict *                   stateDict = nullptr
+  static void GenIsectTransl(
+    const StateDict & lhs,
+    const StateDict & rhs,
+    ProductTranslMap * stateDictIsect
   );
 
   /**
-   * @brief  Compute an initial relation
+   * @brief  Compute a simulation relation
    *
    * @param  aut  Given automaton
    *
-   * return  BDD with initial relation
+   * return  Simulation relation BDD
    */
-  static SymbolicFiniteAutBDD ComputeInitialRelation(
+	static SymbolicFiniteAutBDD ComputeSimulation(
+  	const SymbolicFiniteAutCore & aut
+  );
+
+  /**
+   * @brief  Compute an initial simulation relation
+   *
+   * @param  aut  Given automaton
+   *
+   * return  Initial simulation relation
+   */
+  static SymbolicFiniteAutBDD ComputeInitialSimulation(
     const SymbolicFiniteAutCore & aut
   );
 
   /**
-   * @brief  Compute a relation with next index
+   * @brief  Iterate a simulation relation
    *
    * @param  aut        Given automaton
-   * @param  prevIndex  Relation with index i-1
+   * @param  prevIndex  Simulation relationwith index i-1
    *
-   * return  BDD of relation with index i
+   * return  Simulation relation with index i
    */
-  static SymbolicFiniteAutBDD ComputeNextIndex(
+  static SymbolicFiniteAutBDD IterateSimulation(
     const SymbolicFiniteAutCore & aut,
     const SymbolicFiniteAutBDD &  prevIndex
+  );
+
+  /**
+   * @brief  Dumps simulation relation into a string
+   *
+   * @param  sim        Given simulation relation
+   * @param  stateDict  State translation dictionary
+   *
+   * return  String describing simulation relation
+   */
+  static std::string DumpSimulation(
+    const SymbolicFiniteAutBDD & sim,
+    StateDict *                  stateDict = nullptr
   );
 };
 

@@ -12,6 +12,7 @@
 #include "symbolic_loadable_aut.hh"
 
 using VATA::SymbolicFiniteAut;
+using VATA::SymbolicFiniteAutBDD;
 
 SymbolicFiniteAut::SymbolicFiniteAut()
   : core_(new Core(Core::ParentAut()))
@@ -316,9 +317,7 @@ void SymbolicFiniteAut::AddFinalState(
 
 SymbolicFiniteAut SymbolicFiniteAut::Union(
 		const SymbolicFiniteAut & lhs,
-		const SymbolicFiniteAut & rhs,
-		StateToStateMap *         pTranslMapLhs,
-		StateToStateMap *         pTranslMapRhs
+		const SymbolicFiniteAut & rhs
 )
 {
   assert(lhs.core_ != nullptr);
@@ -327,17 +326,27 @@ SymbolicFiniteAut SymbolicFiniteAut::Union(
   return SymbolicFiniteAut(
     Core::Union(
       *lhs.core_,
-      *rhs.core_,
-      pTranslMapLhs,
-      pTranslMapRhs
+      *rhs.core_
     )
   );
 }
 
+void SymbolicFiniteAut::GenUnionTransl(
+  const StateDict & lhs,
+  const StateDict & rhs,
+  StateToStateMap * lhsUnion,
+  StateToStateMap * rhsUnion
+)
+{
+  assert(lhsUnion != nullptr);
+  assert(rhsUnion != nullptr);
+
+  Core::GenUnionTransl(lhs, rhs, lhsUnion, rhsUnion);
+}
+
 SymbolicFiniteAut SymbolicFiniteAut::Intersection(
 		const SymbolicFiniteAut & lhs,
-		const SymbolicFiniteAut & rhs,
-		ProductTranslMap *        pTranslMap
+		const SymbolicFiniteAut & rhs
 )
 {
   assert(lhs.core_ != nullptr);
@@ -346,10 +355,20 @@ SymbolicFiniteAut SymbolicFiniteAut::Intersection(
   return SymbolicFiniteAut(
     Core::Intersection(
       *lhs.core_,
-      *rhs.core_,
-      pTranslMap
+      *rhs.core_
     )
   );
+}
+
+void SymbolicFiniteAut::GenIsectTransl(
+  const StateDict & lhs,
+  const StateDict & rhs,
+  ProductTranslMap * stateDictIsect
+)
+{
+  assert(stateDictIsect != nullptr);
+
+  Core::GenIsectTransl(lhs, rhs, stateDictIsect);
 }
 
 std::string SymbolicFiniteAut::ComputeSimulation(
@@ -359,5 +378,5 @@ std::string SymbolicFiniteAut::ComputeSimulation(
 {
   assert(aut.core_ != nullptr);
 
-  return Core::ComputeSimulation(*aut.core_, stateDict);
+  return Core::DumpSimulation(Core::ComputeSimulation(*aut.core_), stateDict);
 }
