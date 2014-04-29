@@ -194,6 +194,10 @@ Arguments parseArguments(int argc, char* argv[])
 				{
 					args.representation = REPRESENTATION_EXPLICIT_FA;
 				}
+				else if (currentArg == "sym")
+				{
+					args.representation = REPRESENTATION_SYMBOLIC;
+				}
 				else
 				{
 					throw std::runtime_error("Unsupported representation: " + currentArg);

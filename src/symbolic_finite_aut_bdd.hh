@@ -10,7 +10,7 @@
 #ifndef _VATA_SYMBOLIC_FINITE_AUT_BDD_HH_
 #define _VATA_SYMBOLIC_FINITE_AUT_BDD_HH_
 
-#include <vata/symbolic_finite_aut.hh>
+#include <vata/sym_var_asgn.hh>
 #include "mtbdd/ondriks_mtbdd.hh"
 #include "mtbdd/apply1func.hh"
 #include "mtbdd/apply2func.hh"
@@ -32,16 +32,10 @@ GCC_DIAG_ON(effc++)
 public: // public data types
 
   /// @brief  Symbolic assignment
-  using SymbolicVarAsgn = VATA::SymbolicFiniteAut::SymbolicVarAsgn;
+  using SymbolicVarAsgn = VATA::SymbolicVarAsgn;
 
   /// @brief  List of symbolic assignments
-  using AssignmentList = VATA::SymbolicFiniteAut::AssignmentList;
-
-  /**
-   * @brief  Maps internal representation of a state to another
-             for purposes of some operations (e.g. union)
-   */
-  using StateToStateMap = VATA::SymbolicFiniteAut::StateToStateMap;
+  using AssignmentList = VATA::SymbolicVarAsgn::AssignmentList;
 
 public: // private data types
 

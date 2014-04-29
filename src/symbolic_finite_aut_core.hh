@@ -12,7 +12,6 @@
 
 #include <vata/symbolic_finite_aut.hh>
 #include <vata/util/triple.hh>
-#include "symbolic_finite_aut_bdd.hh"
 
 /// @brief  VATA library namespace
 namespace VATA
@@ -89,6 +88,9 @@ public: // public data types
    */
 	using ProductTranslMap = VATA::SymbolicFiniteAut::ProductTranslMap;
 
+  /// @brief  Matrix of states for simulation purposes
+  using StateBinaryRelation = VATA::SymbolicFiniteAut::StateBinaryRelation;
+
 private: // private data types
 
   /// @brief  Internal transition
@@ -104,7 +106,7 @@ private: // private data types
   using FinalStatesSet = std::set<size_t>;
 
   /// @brief  BDD
-  using SymbolicFiniteAutBDD = VATA::SymbolicFiniteAutBDD;
+  using SymbolicFiniteAutBDD = VATA::SymbolicFiniteAut::SymbolicFiniteAutBDD;
 
   /// @brief  BDD of transitions
   using TransitionsBDD = SymbolicFiniteAutBDD;
@@ -587,6 +589,17 @@ public: // public methods
   static SymbolicFiniteAutBDD IterateSimulation(
     const SymbolicFiniteAutCore & aut,
     const SymbolicFiniteAutBDD &  prevIndex
+  );
+
+  /**
+   * @brief  Converts simulation relation to matrix
+   *
+   * @param  sim  Given simulation relation
+   *
+   * return  Matrix with simulation relation
+   */
+  static StateBinaryRelation MatrixSimulation(
+    const SymbolicFiniteAutBDD & sim
   );
 
   /**

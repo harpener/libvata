@@ -326,3 +326,31 @@ std::string SymbolicFiniteAutCore::DumpSimulation(
     return result;
   }
 }
+
+SymbolicFiniteAutCore::StateBinaryRelation SymbolicFiniteAutCore::
+MatrixSimulation(
+  const SymbolicFiniteAutBDD & sim
+)
+{
+  // number of variables in BDD should be even
+  size_t stateVars = sim.GetVars() / 2;
+
+  // result of this can be redundant
+  StateBinaryRelation result(pow(2, stateVars));
+
+  // surely not effective for symbolically loaded automata
+  AssignmentList list = sim.GetAllAssignments(true);
+
+  for (auto elem : list)
+  {
+    std::string str = elem.ToString();
+
+    result.set(
+      SymbolicFiniteAutBDD::FromSymbolic(str.substr(0 , stateVars)),
+      SymbolicFiniteAutBDD::FromSymbolic(str.substr(stateVars, stateVars)),
+      true
+    );
+  }
+
+  return result;
+}

@@ -45,5 +45,6 @@ int main()
 	aut.LoadFromString(*parser, autStr, stateDict, symbolDict, "explicit");
 
   // compute simulation
-  std::cout << Automaton::ComputeSimulation(aut, &stateDict);
+  Automaton::SymbolicFiniteAutBDD simResult = Automaton::ComputeSimulation(aut);
+  std::cout << Automaton::DumpSimulation(simResult, &stateDict);
 }

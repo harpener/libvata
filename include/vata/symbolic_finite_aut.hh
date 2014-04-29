@@ -14,10 +14,12 @@
 #include <vata/parsing/abstr_parser.hh>
 #include <vata/serialization/abstr_serializer.hh>
 #include <vata/util/aut_description.hh>
-#include <vata/sym_var_asgn.hh>
 #include <vata/util/two_way_dict.hh>
 #include <vata/util/transl_weak.hh>
 #include <vata/util/transl_strict.hh>
+#include <vata/util/binary_relation.hh>
+
+#include "../../src/symbolic_finite_aut_bdd.hh"
 
 /// @brief  VATA library namespace
 namespace VATA
@@ -25,6 +27,7 @@ namespace VATA
   class SymbolicFiniteAut;
   template <typename> class SymbolicLoadableAut;
   class SymbolicFiniteAutCore;
+  class SymbolicFiniteAutBDD;
 }
 
 GCC_DIAG_OFF(effc++) // non-virtual destructors warnings suppress
@@ -40,11 +43,14 @@ public: // data types
   /// @brief  Structure describing an automaton
   using AutDescription = VATA::Util::AutDescription;
 
+  /// @brief  BDD
+  using SymbolicFiniteAutBDD = VATA::SymbolicFiniteAutBDD;
+
   /// @brief  Symbolic assignment
-  using SymbolicVarAsgn = VATA::SymbolicVarAsgn;
+  using SymbolicVarAsgn = VATA::SymbolicFiniteAutBDD::SymbolicVarAsgn;
 
   /// @brief  List of symbolic assignments
-  using AssignmentList = VATA::SymbolicVarAsgn::AssignmentList;
+  using AssignmentList = VATA::SymbolicFiniteAutBDD::AssignmentList;
 
   /**
    * @brief  Bidirectional dictionary translating between string
@@ -96,6 +102,9 @@ public: // data types
    */
 	using ProductTranslMap =
 		std::unordered_map<StatePair, size_t, boost::hash<StatePair>>;
+
+  /// @brief  Matrix of states for simulation purposes
+  using StateBinaryRelation = VATA::Util::BinaryRelation;
 
 private: // data types
 
@@ -181,7 +190,7 @@ public: // public methods
   void LoadFromString(
     VATA::Parsing::AbstrParser & parser,
     const std::string &          str,
-    const std::string &          params
+    const std::string &          params = "explicit"
   );
 
   /**
@@ -200,7 +209,7 @@ public: // public methods
     const std::string &          str,
     StateDict &                  stateDict,
     SymbolDict &                 symbolDict,
-    const std::string &          params
+    const std::string &          params = "explicit"
   );
 
   /**
@@ -219,7 +228,7 @@ public: // public methods
     const std::string &          str,
     StringToStateTranslWeak &    stateTransl,
     StringToSymbolTranslWeak &   symbolTransl,
-    const std::string &          params
+    const std::string &          params = "explicit"
   );
 
   /**
@@ -230,7 +239,7 @@ public: // public methods
    */
   void LoadFromAutDesc(
     const AutDescription & desc,
-    const std::string &    params
+    const std::string &    params = "explicit"
   );
 
   /**
@@ -247,7 +256,7 @@ public: // public methods
     const AutDescription & desc,
     StateDict &            stateDict,
     SymbolDict &           symbolDict,
-    const std::string &    params
+    const std::string &    params = "explicit"
   );
 
   /**
@@ -264,7 +273,7 @@ public: // public methods
     const AutDescription &     desc,
     StringToStateTranslWeak &  stateTransl,
     StringToSymbolTranslWeak & symbolTransl,
-    const std::string &        params
+    const std::string &        params = "explicit"
   );
 
   /**
@@ -275,7 +284,7 @@ public: // public methods
    * @return  String describing an automaton
    */
   std::string DumpToString(
-    const std::string & params
+    const std::string & params = "explicit"
   ) const;
 
   /**
@@ -288,7 +297,7 @@ public: // public methods
    */
   std::string DumpToString(
     VATA::Serialization::AbstrSerializer & serializer,
-    const std::string &                    params
+    const std::string &                    params = "explicit"
   ) const;
 
   /**
@@ -308,7 +317,7 @@ public: // public methods
     VATA::Serialization::AbstrSerializer & serializer,
     const StateDict &                      stateDict,
     const SymbolDict &                     symbolDict,
-    const std::string &                    params
+    const std::string &                    params = "explicit"
   ) const;
 
   /**
@@ -328,7 +337,7 @@ public: // public methods
     VATA::Serialization::AbstrSerializer & serializer,
     StateBackTranslStrict &                stateBackTransl,
     SymbolBackTranslStrict &               symbolBackTransl,
-    const std::string &                    params
+    const std::string &                    params = "explicit"
   ) const;
 
   /**
@@ -339,7 +348,7 @@ public: // public methods
    * @return  Structure describing an automaton
    */
   AutDescription DumpToAutDesc(
-    const std::string & params
+    const std::string & params = "explicit"
   ) const;
 
   /**
@@ -356,7 +365,7 @@ public: // public methods
   AutDescription DumpToAutDesc(
     const StateDict &   stateDict,
     const SymbolDict &  symbolDict,
-    const std::string & params
+    const std::string & params = "explicit"
   ) const;
 
   /**
@@ -373,7 +382,7 @@ public: // public methods
   AutDescription DumpToAutDesc(
     StateBackTranslStrict &  stateBackTransl,
     SymbolBackTranslStrict & symbolBackTransl,
-    const std::string &      params
+    const std::string &      params = "explicit"
   ) const;
 
   /**
@@ -496,16 +505,27 @@ public: // public methods
   );
 
   /**
-   * @brief  Compute and dumps simulation relation into a string
+   * @brief  Compute a simulation relation
    *
    * @param  aut  Given automaton
+   *
+   * return  Simulation relation BDD
+   */
+	static SymbolicFiniteAutBDD ComputeSimulation(
+    const SymbolicFiniteAut & aut
+  );
+
+  /**
+   * @brief  Dumps simulation relation into a string
+   *
+   * @param  sim        Given simulation relation
    * @param  stateDict  State translation dictionary
    *
    * return  String describing simulation relation
    */
-	static std::string ComputeSimulation(
-  	const SymbolicFiniteAut & aut,
-    StateDict *               stateDict = nullptr
+  static std::string DumpSimulation(
+    const SymbolicFiniteAutBDD & sim,
+    StateDict *                  stateDict = nullptr
   );
 };
 

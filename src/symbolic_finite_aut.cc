@@ -371,12 +371,19 @@ void SymbolicFiniteAut::GenIsectTransl(
   Core::GenIsectTransl(lhs, rhs, stateDictIsect);
 }
 
-std::string SymbolicFiniteAut::ComputeSimulation(
-  const SymbolicFiniteAut & aut,
-  StateDict *               stateDict
+SymbolicFiniteAut::SymbolicFiniteAutBDD SymbolicFiniteAut::ComputeSimulation(
+  const SymbolicFiniteAut & aut
 )
 {
   assert(aut.core_ != nullptr);
 
-  return Core::DumpSimulation(Core::ComputeSimulation(*aut.core_), stateDict);
+  return Core::ComputeSimulation(*aut.core_);
+}
+
+std::string SymbolicFiniteAut::DumpSimulation(
+  const SymbolicFiniteAutBDD & sim,
+  StateDict *                  stateDict
+)
+{
+  return Core::DumpSimulation(sim, stateDict);
 }

@@ -14,6 +14,7 @@
 #include <vata/bdd_td_tree_aut.hh>
 #include <vata/explicit_tree_aut.hh>
 #include <vata/explicit_finite_aut.hh>
+#include <vata/symbolic_finite_aut.hh>
 #include <vata/parsing/timbuk_parser.hh>
 #include <vata/serialization/timbuk_serializer.hh>
 #include <vata/util/convert.hh>
@@ -37,6 +38,7 @@ using VATA::BDDBottomUpTreeAut;
 using VATA::BDDTopDownTreeAut;
 using VATA::ExplicitTreeAut;
 using VATA::ExplicitFiniteAut;
+using VATA::SymbolicFiniteAut;
 using VATA::Parsing::AbstrParser;
 using VATA::Parsing::TimbukParser;
 using VATA::Serialization::AbstrSerializer;
@@ -115,6 +117,7 @@ const char VATA_USAGE_FLAGS[] =
 	"                                            bottom-up\n"
 	"                               'expl'     : explicit (default)\n"
 	"                               'expl_fa'  : explicit finite automata\n"
+  "                               'sym'      : symbolic finite automata\n"
 	"\n"
 	"    (-I|-O|-F) <format>     Specify format for input (-I), output (-O), or\n"
 	"                            both (-F). The following formats are supported:\n"
@@ -387,6 +390,118 @@ int executeCommand(const Arguments& args)
 	return performOperation<Aut>(args, *(parser.get()), *(serializer.get()));
 }
 
+// template class with specialization
+template <>
+int performOperation<SymbolicFiniteAut>(
+	const Arguments&        args,
+	AbstrParser&            parser,
+	AbstrSerializer&        serializer)
+{
+  assert(args.representation == REPRESENTATION_SYMBOLIC);
+
+	SymbolicFiniteAut autInput1;
+	SymbolicFiniteAut autInput2;
+	SymbolicFiniteAut autResult;
+  SymbolicFiniteAut::SymbolicFiniteAutBDD simResult;
+
+	SymbolicFiniteAut::StateDict  stateDict1;
+	SymbolicFiniteAut::StateDict  stateDict2;
+  SymbolicFiniteAut::SymbolDict symbolDict1;
+  SymbolicFiniteAut::SymbolDict symbolDict2;
+
+	if (args.operands >= 1)
+	{
+		autInput1.LoadFromString(
+			parser,
+			VATA::Util::ReadFile(args.fileName1),
+			stateDict1,
+      symbolDict1);
+	}
+
+	if (args.operands >= 2)
+	{
+		autInput2.LoadFromString(
+			parser,
+			VATA::Util::ReadFile(args.fileName2),
+			stateDict2,
+      symbolDict2);
+	}
+
+	clock_gettime(CLOCK_THREAD_CPUTIME_ID, &startTime);     // set the timer
+
+	timespec finishTime;
+
+	// process command
+  switch (args.command){
+    case COMMAND_LOAD: autResult = autInput1; break;
+    case COMMAND_UNION:
+      autResult = SymbolicFiniteAut::Union(autInput1, autInput2); break;
+    case COMMAND_INTERSECTION:
+      autResult = SymbolicFiniteAut::Intersection(autInput1, autInput2); break;
+    case COMMAND_SIM:
+      simResult = SymbolicFiniteAut::ComputeSimulation(autInput1); break;
+    case COMMAND_WITNESS:
+    case COMMAND_COMPLEMENT:
+    case COMMAND_INCLUSION:
+    case COMMAND_EQUIV:
+    case COMMAND_RED: throw std::runtime_error("Unimplemented"); break;
+    default: throw std::runtime_error("Internal error: invalid command"); break;
+  }
+
+	// get the finish time
+	if (clock_gettime(CLOCK_THREAD_CPUTIME_ID, &finishTime))
+	{
+		throw std::runtime_error("Could not get the finish time");
+	}
+	double opTime = (finishTime.tv_sec - startTime.tv_sec)
+		+ 1e-9 * (finishTime.tv_nsec - startTime.tv_nsec);
+
+	if (args.showTime)
+	{
+		std::cerr << opTime << "\n";
+	}
+
+	if (!args.dontOutputResult)
+	{	// in case output is not forbidden
+    SymbolicFiniteAut::StateToStateMap opTranslMap1;
+	  SymbolicFiniteAut::StateToStateMap opTranslMap2;
+    SymbolicFiniteAut::ProductTranslMap prodTranslMap;
+
+    switch (args.command){
+      case COMMAND_LOAD:
+        std::cout << autResult.DumpToString(
+          serializer, stateDict1, symbolDict1
+        ); break;
+      case COMMAND_UNION:
+        SymbolicFiniteAut::GenUnionTransl(
+          stateDict1, stateDict2, &opTranslMap1, &opTranslMap2
+        );
+        stateDict1 = VATA::Util::CreateUnionStringToStateMap(
+				  stateDict1, stateDict2, &opTranslMap1, &opTranslMap2
+        );
+        std::cout << autResult.DumpToString(
+          serializer, stateDict1, symbolDict1
+        ); break;
+      case COMMAND_INTERSECTION:
+        SymbolicFiniteAut::GenIsectTransl(
+          stateDict1, stateDict2, &prodTranslMap
+        );
+        stateDict1 = VATA::Util::CreateProductStringToStateMap(
+				  stateDict1, stateDict2, prodTranslMap
+        );
+        std::cout << autResult.DumpToString(
+          serializer, stateDict1, symbolDict1
+        ); break;
+      case COMMAND_SIM:
+        std::cout << SymbolicFiniteAut::DumpSimulation(
+          simResult, &stateDict1
+        ); break;
+      default: break;
+    }
+	}
+
+	return EXIT_SUCCESS;
+}
 
 int main(int argc, char* argv[])
 {
@@ -442,6 +557,10 @@ int main(int argc, char* argv[])
 		else if (args.representation == REPRESENTATION_EXPLICIT_FA)
 		{
 			return executeCommand<ExplicitFiniteAut>(args);
+		}
+		else if (args.representation == REPRESENTATION_SYMBOLIC)
+		{
+			return executeCommand<SymbolicFiniteAut>(args);
 		}
 		else
 		{
