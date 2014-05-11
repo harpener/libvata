@@ -12,8 +12,7 @@
 
 #include <vata/sym_var_asgn.hh>
 #include "mtbdd/ondriks_mtbdd.hh"
-#include "mtbdd/apply1func.hh"
-#include "mtbdd/apply2func.hh"
+#include "mtbdd/bool_apply2func.hh"
 
 /// @brief  VATA library namespace
 namespace VATA
@@ -47,167 +46,20 @@ public: // private data types
 
 public: // apply functors
 
-	GCC_DIAG_OFF(effc++) // suppress missing virtual destructor warning
+  /// @brief  Negation functor
+  using NegationApplyFunctor = VATA::MTBDDPkg::NegationApplyFunctor;
 
-  /// @brief  Apply functor with negation operation
-  class NegationApplyFunctor
-    : public VATA::MTBDDPkg::Apply1Functor<
-      NegationApplyFunctor,
-      bool,
-      bool
-    >
-	{
+  /// @brief  Union functor
+  using  UnionApplyFunctor = VATA::MTBDDPkg::UnionApplyFunctor;
 
-	GCC_DIAG_ON(effc++)
+  /// @brief  Intersection functor
+  using IntersectionApplyFunctor = VATA::MTBDDPkg::IntersectionApplyFunctor;
 
-	public: // methods
+  /// @brief  Consequence functor
+  using ConsequenceApplyFunctor = VATA::MTBDDPkg::ConsequenceApplyFunctor;
 
-    /**
-     * @brief  Negation operation
-     *
-     * @param[in]  val  Data value for negation
-     *
-     * @return  Negation of given data value
-     */
-		bool ApplyOperation(
-      const bool & val
-    )
-    {
-			return !val;
-		}
-	};
-
-  GCC_DIAG_OFF(effc++) // suppress missing virtual destructor warning
-
-  /// @brief  Apply functor with union operation
-	class UnionApplyFunctor
-    : public VATA::MTBDDPkg::Apply2Functor<
-        UnionApplyFunctor,
-        bool,
-        bool,
-        bool
-      >
-	{
-
-	GCC_DIAG_ON(effc++)
-
-	public: // methods
-
-    /**
-     * @brief  Union operation
-     *
-     * @param[in]  lhs  First data value for union
-     * @param[in]  rhs  Second data value for union
-     *
-     * @return  Union of given data values
-     */
-		bool ApplyOperation(
-      const bool & lhs,
-      const bool & rhs
-    )
-    {
-			return (lhs | rhs);
-		}
-	};
-
-  GCC_DIAG_OFF(effc++) // suppress missing virtual destructor warning
-
-  /// @brief  Apply functor with intersection operation
-	class IntersectionApplyFunctor
-    : public VATA::MTBDDPkg::Apply2Functor<
-        IntersectionApplyFunctor,
-        bool,
-        bool,
-        bool
-      >
-	{
-
-	GCC_DIAG_ON(effc++)
-
-	public: // methods
-
-    /**
-     * @brief  Intersection operation
-     *
-     * @param[in]  lhs  First data value for intersection
-     * @param[in]  rhs  Second data value for intersection
-     *
-     * @return  Intersection of given data values
-     */
-		bool ApplyOperation(
-      const bool & lhs,
-      const bool & rhs
-    )
-		{
-			return (lhs & rhs);
-		}
-	};
-
-  GCC_DIAG_OFF(effc++) // suppress missing virtual destructor warning
-
-  /// @brief  Apply functor with consequence operation
-	class ConsequenceApplyFunctor
-    : public VATA::MTBDDPkg::Apply2Functor<
-        ConsequenceApplyFunctor,
-        bool,
-        bool,
-        bool
-      >
-	{
-
-	GCC_DIAG_ON(effc++)
-
-	public: // methods
-
-    /**
-     * @brief  Consequence operation
-     *
-     * @param[in]  lhs  First data value for consequence
-     * @param[in]  rhs  Second data value for consequence
-     *
-     * @return  Consequence of given data values
-     */
-		bool ApplyOperation(
-      const bool & lhs,
-      const bool & rhs
-    )
-		{
-			return (!lhs | rhs);
-		}
-	};
-
-  GCC_DIAG_OFF(effc++) // suppress missing virtual destructor warning
-
-  /// @brief  Apply functor with equivalence operation
-	class EquivalenceApplyFunctor
-    : public VATA::MTBDDPkg::Apply2Functor<
-        EquivalenceApplyFunctor,
-        bool,
-        bool,
-        bool
-      >
-	{
-
-	GCC_DIAG_ON(effc++)
-
-	public: // methods
-
-    /**
-     * @brief  Equivalence operation
-     *
-     * @param[in]  lhs  First data value for equivalence
-     * @param[in]  rhs  Second data value for equivalence
-     *
-     * @return  Equivalence of given data values
-     */
-		bool ApplyOperation(
-      const bool & lhs,
-      const bool & rhs
-    )
-		{
-			return ((!lhs | rhs) & (!rhs | lhs));
-		}
-	};
+  /// @brief  Equivalence functor
+  using EquivalenceApplyFunctor = VATA::MTBDDPkg::EquivalenceApplyFunctor;
 
 private: // data members
 

@@ -291,6 +291,10 @@ public: // public methods
     SymbolTranslFunc       symbolTransl
   )
   {
+    assert(transitions_   != nullptr);
+    assert(initialStates_ != nullptr);
+    assert(finalStates_   != nullptr);
+
     // store to internal representation before converting to symbolic
     TransitionsSet transitionsSet;
     InitialStatesSet initialStatesSet;
@@ -300,14 +304,31 @@ public: // public methods
     std::set<size_t> states;
     std::set<size_t> symbols;
 
+    // if states and symbols are known
+    if (!desc.states.empty() && !desc.symbols.empty())
+    {
+      size_t size1 = desc.states.size();
+      size_t size2 = desc.symbols.size();
+      stateVars_ = ((size1 < 2) ? 1 : ceil(log2(size1)));
+      symbolVars_ = ((size2 < 2) ? 1 : ceil(log2(size2)));
+    }
+
     for (auto transition : desc.transitions)
     { // transitions and initial states
       if (transition.first.empty())
       { // an init state is represented as a transition with no left-side state
         size_t state = stateTransl(transition.third);
 
-        states.insert(state);
-        initialStatesSet.insert(state);
+        if(stateVars_)
+        {
+          initialStates_->AddAssignment(SymbolicVarAsgn(stateVars_, state));
+        }
+
+        else
+        {
+          states.insert(state);
+          initialStatesSet.insert(state);
+        }
       }
 
       else if (transition.first.size() > 1)
@@ -321,10 +342,26 @@ public: // public methods
         size_t symbol = symbolTransl(transition.second);
         size_t rstate = stateTransl(transition.third);
 
-        states.insert(lstate);
-        symbols.insert(symbol);
-        states.insert(rstate);
-        transitionsSet.insert(TransitionType(lstate, symbol, rstate));
+        if(stateVars_ && symbolVars_)
+        {
+          transitions_->AddAssignment(
+            SymbolicFiniteAutBDD::MergeTransition(
+              stateVars_,
+              symbolVars_,
+              lstate,
+              symbol,
+              rstate
+            )
+          );
+        }
+
+        else
+        {
+          states.insert(lstate);
+          symbols.insert(symbol);
+          states.insert(rstate);
+          transitionsSet.insert(TransitionType(lstate, symbol, rstate));
+        }
       }
     }
 
@@ -332,41 +369,48 @@ public: // public methods
     { // final states
       size_t state = stateTransl(finalState);
 
-      states.insert(state);
-      finalStatesSet.insert(state);
+      if(stateVars_)
+      {
+        finalStates_->AddAssignment(SymbolicVarAsgn(stateVars_, state));
+      }
+
+      else
+      {
+        states.insert(state);
+        finalStatesSet.insert(state);
+      }
     }
 
-    // determine number of variables to represent a symbolic state or symbol
-    size_t size1 = states.size();
-    size_t size2 = symbols.size();
-    stateVars_ = ((size1 < 2) ? 1 : ceil(log2(size1)));
-    symbolVars_ = ((size2 < 2) ? 1 : ceil(log2(size2)));
+    if(!stateVars_ && !symbolVars_)
+    {
+      // determine number of variables to represent a symbolic state or symbol
+      size_t size1 = states.size();
+      size_t size2 = symbols.size();
+      stateVars_ = ((size1 < 2) ? 1 : ceil(log2(size1)));
+      symbolVars_ = ((size2 < 2) ? 1 : ceil(log2(size2)));
 
-    assert(transitions_   != nullptr);
-    assert(initialStates_ != nullptr);
-    assert(finalStates_   != nullptr);
+      for (auto transition : transitionsSet)
+      { // transitions
+        transitions_->AddAssignment(
+          SymbolicFiniteAutBDD::MergeTransition(
+            stateVars_,
+            symbolVars_,
+            transition.first,
+            transition.second,
+            transition.third
+          )
+        );
+      }
 
-    for (auto transition : transitionsSet)
-    { // transitions
-      transitions_->AddAssignment(
-        SymbolicFiniteAutBDD::MergeTransition(
-          stateVars_,
-          symbolVars_,
-          transition.first,
-          transition.second,
-          transition.third
-        )
-      );
-    }
+      for (auto initialState : initialStatesSet)
+      { // initial states
+        initialStates_->AddAssignment(SymbolicVarAsgn(stateVars_, initialState));
+      }
 
-    for (auto initialState : initialStatesSet)
-    { // initial states
-      initialStates_->AddAssignment(SymbolicVarAsgn(stateVars_, initialState));
-    }
-
-    for (auto finalState : finalStatesSet)
-    { // final states
-      finalStates_->AddAssignment(SymbolicVarAsgn(stateVars_, finalState));
+      for (auto finalState : finalStatesSet)
+      { // final states
+        finalStates_->AddAssignment(SymbolicVarAsgn(stateVars_, finalState));
+      }
     }
   }
 

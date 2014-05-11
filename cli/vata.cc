@@ -168,6 +168,11 @@ int performOperation(
 
 	AutBase::StateToStateMap translMap1;
 
+  if (args.command == COMMAND_LOAD)
+  {
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &startTime);     // set the timer
+  }
+
 	if (args.operands >= 1)
 	{
 		autInput1.LoadFromString(
@@ -220,7 +225,10 @@ int performOperation(
 	AutBase::StateToStateMap opTranslMap2;
 	AutBase::ProductTranslMap prodTranslMap;
 
-	clock_gettime(CLOCK_THREAD_CPUTIME_ID, &startTime);     // set the timer
+  if (args.command != COMMAND_LOAD)
+  {
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &startTime);     // set the timer
+  }
 
 	timespec finishTime;
 
@@ -409,6 +417,11 @@ int performOperation<SymbolicFiniteAut>(
   SymbolicFiniteAut::SymbolDict symbolDict1;
   SymbolicFiniteAut::SymbolDict symbolDict2;
 
+  if (args.command == COMMAND_LOAD)
+  {
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &startTime);     // set the timer
+  }
+
 	if (args.operands >= 1)
 	{
 		autInput1.LoadFromString(
@@ -427,7 +440,10 @@ int performOperation<SymbolicFiniteAut>(
       symbolDict2);
 	}
 
-	clock_gettime(CLOCK_THREAD_CPUTIME_ID, &startTime);     // set the timer
+  if (args.command != COMMAND_LOAD)
+  {
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &startTime);     // set the timer
+  }
 
 	timespec finishTime;
 

@@ -16,6 +16,9 @@ SymbolicFiniteAutCore SymbolicFiniteAutCore::Intersection(
 	const SymbolicFiniteAutCore & rhs
 )
 {
+  // alphabets are equal
+  assert(lhs.symbolVars_ == rhs.symbolVars_);
+
   SymbolicFiniteAutCore result;
   SymbolicFiniteAutBDD tempLhs, tempRhs;
   SymbolicFiniteAutBDD::IntersectionApplyFunctor isectFunc;

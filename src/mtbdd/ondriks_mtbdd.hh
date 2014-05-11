@@ -48,6 +48,9 @@ namespace VATA
 		template <class, typename, typename, typename, typename>
 		class Apply3Functor;
 
+    template <class>
+	  class BoolApply2Functor;
+
 		template <class, typename>
 		class VoidApply1Functor;
 
@@ -81,6 +84,9 @@ class VATA::MTBDDPkg::OndriksMTBDD
 
 	template <class, typename, typename, typename, typename>
 	friend class Apply3Functor;
+
+	template <class>
+	friend class BoolApply2Functor;
 
 	template <class, typename>
 	friend class VoidApply1Functor;

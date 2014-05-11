@@ -152,6 +152,20 @@ public:   // Public methods
 			ht()
 	{ }
 
+	NodeOutPtrType operator()(const Node1PtrType& node1)
+	{
+		assert(!IsNull(node1));
+
+		// clear the MTBDD
+		mtbdd1_ = nullptr;
+
+		// clear the cache
+		ht.clear();
+
+		// recursively descend the nodes and generate a new one
+		return recDescend(node1);
+	}
+
 	MTBDDOutType operator()(const MTBDD1Type& mtbdd1)
 	{
 		// store the MTBDD
