@@ -21,8 +21,8 @@ SymbolicFiniteAutCore SymbolicFiniteAutCore::Union(
 
   SymbolicFiniteAutCore result;
   SymbolicFiniteAutBDD tempLhs, tempRhs;
-  SymbolicFiniteAutBDD::UnionApplyFunctor unionFunc;
-  SymbolicFiniteAutBDD::IntersectionApplyFunctor isectFunc;
+  SymbolicFiniteAutBDD::OrApplyFunctor unionFunc;
+  SymbolicFiniteAutBDD::AndApplyFunctor isectFunc;
   std::string str;
 
   // number of state variables

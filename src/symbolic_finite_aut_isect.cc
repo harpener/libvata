@@ -21,7 +21,7 @@ SymbolicFiniteAutCore SymbolicFiniteAutCore::Intersection(
 
   SymbolicFiniteAutCore result;
   SymbolicFiniteAutBDD tempLhs, tempRhs;
-  SymbolicFiniteAutBDD::IntersectionApplyFunctor isectFunc;
+  SymbolicFiniteAutBDD::AndApplyFunctor isectFunc;
 
   // number of state and symbol variables
   result.stateVars_ = lhs.stateVars_ + rhs.stateVars_;

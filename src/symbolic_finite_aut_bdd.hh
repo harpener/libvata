@@ -46,20 +46,20 @@ public: // private data types
 
 public: // apply functors
 
-  /// @brief  Negation functor
-  using NegationApplyFunctor = VATA::MTBDDPkg::NegationApplyFunctor;
+  /// @brief  Apply functor with negation operation
+  using NegApplyFunctor = VATA::MTBDDPkg::NegApplyFunctor;
 
-  /// @brief  Union functor
-  using  UnionApplyFunctor = VATA::MTBDDPkg::UnionApplyFunctor;
+  /// @brief  Apply functor with disjunction operation
+  using OrApplyFunctor = VATA::MTBDDPkg::OrApplyFunctor;
 
-  /// @brief  Intersection functor
-  using IntersectionApplyFunctor = VATA::MTBDDPkg::IntersectionApplyFunctor;
+  /// @brief  Apply functor with conjunction operation
+  using AndApplyFunctor = VATA::MTBDDPkg::AndApplyFunctor;
 
-  /// @brief  Consequence functor
-  using ConsequenceApplyFunctor = VATA::MTBDDPkg::ConsequenceApplyFunctor;
+  /// @brief  Apply functor with implication operation
+  using ImplicApplyFunctor = VATA::MTBDDPkg::ImplicApplyFunctor;
 
-  /// @brief  Equivalence functor
-  using EquivalenceApplyFunctor = VATA::MTBDDPkg::EquivalenceApplyFunctor;
+  /// @brief  Apply functor with equivalence operation
+  using EquivApplyFunctor = VATA::MTBDDPkg::EquivApplyFunctor;
 
 private: // data members
 

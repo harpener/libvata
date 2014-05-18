@@ -154,7 +154,7 @@ void SymbolicFiniteAutBDD::AddAssignment(
     this->vars_ = asgn.length();
   }
 
-  UnionApplyFunctor unionFunc;
+  OrApplyFunctor unionFunc;
   *this->mtbdd_ = unionFunc(*this->mtbdd_, BDD(asgn, true, false));
 }
 

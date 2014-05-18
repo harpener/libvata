@@ -31,18 +31,18 @@ namespace VATA
 		template <class Base>
 		class BoolApply2Functor;
 
-    class NegationApplyFunctor;
-    class UnionApplyFunctor;
-    class IntersectionApplyFunctor;
-    class ConsequenceApplyFunctor;
-    class EquivalenceApplyFunctor;
+    class NegApplyFunctor;
+    class OrApplyFunctor;
+    class AndApplyFunctor;
+    class ImplicApplyFunctor;
+    class EquivApplyFunctor;
 	}
 }
 
 GCC_DIAG_OFF(effc++)
-class VATA::MTBDDPkg::NegationApplyFunctor
+class VATA::MTBDDPkg::NegApplyFunctor
   : public VATA::MTBDDPkg::Apply1Functor<
-    NegationApplyFunctor,
+    NegApplyFunctor,
     bool,
     bool
   >
@@ -235,8 +235,8 @@ protected:// Protected methods
 };
 
 GCC_DIAG_OFF(effc++)
-class VATA::MTBDDPkg::UnionApplyFunctor
-  : public VATA::MTBDDPkg::BoolApply2Functor<VATA::MTBDDPkg::UnionApplyFunctor>
+class VATA::MTBDDPkg::OrApplyFunctor
+  : public VATA::MTBDDPkg::BoolApply2Functor<VATA::MTBDDPkg::OrApplyFunctor>
 {
 GCC_DIAG_ON(effc++)
 
@@ -262,8 +262,8 @@ public:
 };
 
 GCC_DIAG_OFF(effc++)
-class VATA::MTBDDPkg::IntersectionApplyFunctor
-  : public VATA::MTBDDPkg::BoolApply2Functor<VATA::MTBDDPkg::IntersectionApplyFunctor>
+class VATA::MTBDDPkg::AndApplyFunctor
+  : public VATA::MTBDDPkg::BoolApply2Functor<VATA::MTBDDPkg::AndApplyFunctor>
 {
 GCC_DIAG_ON(effc++)
 
@@ -289,8 +289,8 @@ public:
 };
 
 GCC_DIAG_OFF(effc++)
-class VATA::MTBDDPkg::ConsequenceApplyFunctor
-  : public VATA::MTBDDPkg::BoolApply2Functor<VATA::MTBDDPkg::ConsequenceApplyFunctor>
+class VATA::MTBDDPkg::ImplicApplyFunctor
+  : public VATA::MTBDDPkg::BoolApply2Functor<VATA::MTBDDPkg::ImplicApplyFunctor>
 {
 GCC_DIAG_ON(effc++)
 
@@ -301,7 +301,7 @@ public:
     const Node2PtrType & node2
   )
 	{
-    VATA::MTBDDPkg::NegationApplyFunctor negFunc;
+    VATA::MTBDDPkg::NegApplyFunctor negFunc;
 
     if (IsLeaf(node1))
     {
@@ -318,8 +318,8 @@ public:
 };
 
 GCC_DIAG_OFF(effc++)
-class VATA::MTBDDPkg::EquivalenceApplyFunctor
-  : public VATA::MTBDDPkg::BoolApply2Functor<VATA::MTBDDPkg::EquivalenceApplyFunctor>
+class VATA::MTBDDPkg::EquivApplyFunctor
+  : public VATA::MTBDDPkg::BoolApply2Functor<VATA::MTBDDPkg::EquivApplyFunctor>
 {
 GCC_DIAG_ON(effc++)
 
@@ -330,7 +330,7 @@ public:
     const Node2PtrType & node2
   )
 	{
-    VATA::MTBDDPkg::NegationApplyFunctor negFunc;
+    VATA::MTBDDPkg::NegApplyFunctor negFunc;
 
     if (IsLeaf(node1))
     {

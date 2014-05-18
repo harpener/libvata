@@ -17,9 +17,9 @@ ComputeInitialSimulation(
 )
 {
   SymbolicFiniteAutBDD result, lhs, rhs;
-  SymbolicFiniteAutBDD::UnionApplyFunctor unionFunc;
-  SymbolicFiniteAutBDD::IntersectionApplyFunctor isectFunc;
-  SymbolicFiniteAutBDD::ConsequenceApplyFunctor conseqFunc;
+  SymbolicFiniteAutBDD::OrApplyFunctor unionFunc;
+  SymbolicFiniteAutBDD::AndApplyFunctor isectFunc;
+  SymbolicFiniteAutBDD::ImplicApplyFunctor implicFunc;
 
   // for a pair "q1" in Q1 and "a" in Sigma there exists such "q2" in Q2
   // that the triple "q1", "a" and "q2" are in Delta
@@ -50,7 +50,7 @@ ComputeInitialSimulation(
   // if "q1" in Q1 transitions with "a" in Sigma
   // then "q2" in Q1 must transition with "a" as well
   result = SymbolicFiniteAutBDD(
-    conseqFunc(lhs.GetBDD(), rhs.GetBDD()),
+    implicFunc(lhs.GetBDD(), rhs.GetBDD()),
     aut.stateVars_ + aut.stateVars_ + aut.symbolVars_
   );
 
@@ -72,51 +72,13 @@ ComputeInitialSimulation(
 
   // if "q1" belongs to F then "q2" must belong to F as well
   rhs = SymbolicFiniteAutBDD(
-    conseqFunc(aut.finalStates_->GetBDD(), rhs.GetBDD()),
+    implicFunc(aut.finalStates_->GetBDD(), rhs.GetBDD()),
     aut.stateVars_ + aut.stateVars_
   );
 
   // apply previous statement on simulation relation
   result = SymbolicFiniteAutBDD(
     isectFunc(result.GetBDD(), rhs.GetBDD()),
-    aut.stateVars_ + aut.stateVars_
-  );
-
-  // reindex F so it can overlap
-  rhs = aut.finalStates_->Rename(
-    aut.stateVars_ + aut.stateVars_,
-    [aut](const size_t var){return var + aut.stateVars_;}
-  );
-
-  // if there are no transitions
-  // then cartesian product of final states is valid
-  rhs = SymbolicFiniteAutBDD(
-    isectFunc(aut.finalStates_->GetBDD(), rhs.GetBDD()),
-    aut.stateVars_ + aut.stateVars_
-  );
-
-  // apply previous statement on simulation relation
-  result = SymbolicFiniteAutBDD(
-    unionFunc(result.GetBDD(), rhs.GetBDD()),
-    aut.stateVars_ + aut.stateVars_
-  );
-
-  // reindex I so it can overlap
-  rhs = aut.initialStates_->Rename(
-    aut.stateVars_ + aut.stateVars_,
-    [aut](const size_t var){return var + aut.stateVars_;}
-  );
-
-  // if there are no transitions
-  // then cartesian product of initial states is valid
-  rhs = SymbolicFiniteAutBDD(
-    isectFunc(aut.initialStates_->GetBDD(), rhs.GetBDD()),
-    aut.stateVars_ + aut.stateVars_
-  );
-
-  // apply previous statement on simulation relation
-  result = SymbolicFiniteAutBDD(
-    unionFunc(result.GetBDD(), rhs.GetBDD()),
     aut.stateVars_ + aut.stateVars_
   );
 
@@ -130,9 +92,9 @@ IterateSimulation(
 )
 {
   SymbolicFiniteAutBDD result, lhs, rhs;
-  SymbolicFiniteAutBDD::UnionApplyFunctor unionFunc;
-  SymbolicFiniteAutBDD::IntersectionApplyFunctor isectFunc;
-  SymbolicFiniteAutBDD::ConsequenceApplyFunctor conseqFunc;
+  SymbolicFiniteAutBDD::OrApplyFunctor unionFunc;
+  SymbolicFiniteAutBDD::AndApplyFunctor isectFunc;
+  SymbolicFiniteAutBDD::ImplicApplyFunctor implicFunc;
 
   // reindex Q2 so it can overlap
   lhs = aut.transitions_->Rename(
@@ -184,7 +146,7 @@ IterateSimulation(
   // if "q1" transitions to "q2" using "a"
   // then previous statements are valid
   result = SymbolicFiniteAutBDD(
-    conseqFunc(lhs.GetBDD(), result.GetBDD()),
+    implicFunc(lhs.GetBDD(), result.GetBDD()),
     aut.stateVars_ + aut.stateVars_ + aut.symbolVars_ + aut.stateVars_
   );
 
@@ -209,7 +171,7 @@ IterateSimulation(
     isectFunc
   );
 
-  // rename F so it can overlap
+  // reindex F so it can overlap
   rhs = aut.finalStates_->Rename(
     aut.stateVars_ + aut.stateVars_,
     [aut](const size_t var){return var + aut.stateVars_;}
@@ -217,7 +179,7 @@ IterateSimulation(
 
   // if "q1" belongs to F then "q4" must belong to F as well
   rhs = SymbolicFiniteAutBDD(
-    conseqFunc(aut.finalStates_->GetBDD(), rhs.GetBDD()),
+    implicFunc(aut.finalStates_->GetBDD(), rhs.GetBDD()),
     aut.stateVars_ + aut.stateVars_
   );
 
@@ -239,7 +201,7 @@ ComputeSimulation(
   SymbolicFiniteAutBDD prevRelation = ComputeInitialSimulation(aut);
 
   // iterate simulation relation
-  SymbolicFiniteAutBDD nextRelation = IterateSimulation(aut,prevRelation);
+  SymbolicFiniteAutBDD nextRelation = IterateSimulation(aut, prevRelation);
 
   while(prevRelation != nextRelation)
   { // iterate simulation relation until it stops changing
@@ -262,7 +224,7 @@ std::string SymbolicFiniteAutCore::DumpSimulation(
 
   if (stateDict != nullptr)
   { // explicit serialization
-    SymbolicFiniteAutBDD::IntersectionApplyFunctor isectFunc;
+    SymbolicFiniteAutBDD::AndApplyFunctor isectFunc;
     SymbolicFiniteAutBDD Q1, Q2, simLimited;
     size_t size = stateDict->size();
 
